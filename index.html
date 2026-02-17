@@ -1,0 +1,2345 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RPOA v3 — Outil Sismique Complet | Calcul Appuis de Pont</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap');
+
+[data-theme="dark"]{
+  --bg:#07090f;--surf:#0e1220;--card:#131926;--bord:#1a2238;
+  --acc:#f0a830;--blue:#4a90e8;--grn:#2ed47a;--red:#e84848;--pur:#a060f0;
+  --txt:#d4dff0;--mut:#4d5f78;--lbl:#6a80a0;--inp:#080c16;--shadow:rgba(0,0,0,.5);
+}
+[data-theme="light"]{
+  --bg:#f2f4fa;--surf:#ffffff;--card:#f8f9fc;--bord:#dde2f0;
+  --acc:#c87800;--blue:#2568c8;--grn:#18a050;--red:#cc2828;--pur:#7040d0;
+  --txt:#1a2440;--mut:#8090b0;--lbl:#506080;--inp:#ffffff;--shadow:rgba(0,0,0,.12);
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--txt);font-family:'DM Sans',sans-serif;min-height:100vh;transition:background .25s,color .25s;}
+
+/* ── HEADER ── */
+header{background:var(--surf);border-bottom:2px solid var(--bord);padding:0 18px;display:flex;align-items:center;gap:10px;height:54px;position:sticky;top:0;z-index:400;box-shadow:0 2px 12px var(--shadow);}
+.logo{background:var(--acc);color:#000;font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:2px;padding:3px 9px;border-radius:3px;white-space:nowrap;}
+header h1{font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:2px;white-space:nowrap;color:var(--txt);}
+.hsep{flex:1;}
+.htools{display:flex;align-items:center;gap:5px;flex-wrap:wrap;}
+.hbtn{background:var(--card);border:1px solid var(--bord);color:var(--lbl);font-size:11px;padding:4px 10px;border-radius:4px;cursor:pointer;font-family:'DM Sans',sans-serif;transition:.14s;white-space:nowrap;display:inline-flex;align-items:center;gap:4px;}
+.hbtn:hover{color:var(--txt);border-color:var(--acc);}
+.lang-sw{display:flex;border:1px solid var(--bord);border-radius:4px;overflow:hidden;}
+.lang-sw button{background:none;border:none;color:var(--lbl);font-size:11px;padding:4px 9px;cursor:pointer;font-family:'DM Sans',sans-serif;transition:.14s;}
+.lang-sw button.on{background:var(--acc);color:#000;}
+
+/* ── LAYOUT ── */
+.wrap{display:flex;min-height:calc(100vh - 54px);}
+
+/* ── NAV ── */
+nav{width:205px;min-width:205px;background:var(--surf);border-right:1px solid var(--bord);padding:14px 0;position:sticky;top:54px;height:calc(100vh - 54px);overflow-y:auto;z-index:300;}
+.nsec{font-size:8.5px;font-weight:700;letter-spacing:2px;color:var(--mut);padding:12px 15px 4px;text-transform:uppercase;}
+nav a.nb{display:flex;align-items:center;gap:7px;background:none;border:none;border-left:3px solid transparent;color:var(--lbl);font-family:'DM Sans',sans-serif;font-size:12px;padding:7px 15px;cursor:pointer;width:100%;text-decoration:none;transition:.13s;}
+nav a.nb:hover{color:var(--txt);background:rgba(128,128,128,.05);}
+nav a.nb.on{color:var(--acc);border-left-color:var(--acc);background:rgba(240,168,48,.07);}
+.ni{font-size:12px;width:15px;text-align:center;flex-shrink:0;}
+.nstat{margin-left:auto;width:7px;height:7px;border-radius:50%;background:var(--bord);}
+.nstat.done{background:var(--grn);}
+.nstat.warn{background:var(--acc);}
+
+/* ── MAIN ── */
+main{flex:1;padding:22px 26px;overflow-y:auto;max-width:calc(100vw - 205px);}
+
+/* ── PANELS ── */
+.panel{display:none;animation:fade .18s ease;}
+.panel.on{display:block;}
+@keyframes fade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+.ptitle{font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:3px;margin-bottom:2px;}
+.psub{color:var(--mut);font-size:11px;margin-bottom:18px;}
+
+/* ── GRID ── */
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.g3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;}
+.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;}
+.s2{grid-column:span 2;}.s3{grid-column:span 3;}.s4{grid-column:span 4;}
+
+/* ── CARDS ── */
+.card{background:var(--card);border:1px solid var(--bord);border-radius:8px;padding:15px;}
+.card.al{border-left:3px solid var(--acc);}
+.card.bl{border-left:3px solid var(--blue);}
+.card.gl{border-left:3px solid var(--grn);}
+.card.pl{border-left:3px solid var(--pur);}
+.ctitle{font-size:9px;font-weight:700;letter-spacing:1.8px;text-transform:uppercase;color:var(--mut);margin-bottom:11px;display:flex;align-items:center;gap:6px;}
+.ctitle::after{content:'';flex:1;height:1px;background:var(--bord);}
+.ca{color:var(--acc)!important;}.cb{color:var(--blue)!important;}.cg{color:var(--grn)!important;}.cp{color:var(--pur)!important;}
+
+/* ── FORM ── */
+.fr{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;}
+.fr3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:8px;}
+.field{display:flex;flex-direction:column;gap:3px;}
+.field label{font-size:9.5px;color:var(--lbl);font-weight:600;letter-spacing:.3px;display:flex;align-items:center;gap:3px;}
+.tip{display:inline-flex;align-items:center;justify-content:center;width:12px;height:12px;background:var(--bord);border-radius:50%;font-size:7.5px;cursor:help;color:var(--mut);transition:.14s;position:relative;flex-shrink:0;}
+.tip:hover{background:var(--acc);color:#000;}
+.tip .tt{display:none;position:absolute;bottom:calc(100% + 5px);left:50%;transform:translateX(-50%);background:var(--surf);border:1px solid var(--bord);border-radius:5px;padding:7px 9px;font-size:10px;color:var(--txt);z-index:500;width:200px;line-height:1.5;white-space:normal;box-shadow:0 4px 14px var(--shadow);pointer-events:none;}
+.tip:hover .tt{display:block;}
+input,select{background:var(--inp);border:1px solid var(--bord);color:var(--txt);font-family:'DM Mono',monospace;font-size:12px;padding:5px 8px;border-radius:4px;outline:none;transition:.14s;width:100%;}
+input:focus,select:focus{border-color:var(--blue);box-shadow:0 0 0 2px rgba(74,144,232,.12);}
+input.err{border-color:var(--red)!important;background:rgba(232,72,72,.05)!important;}
+input.good{border-color:var(--grn)!important;}
+.errmsg{font-size:8.5px;color:var(--red);margin-top:1px;}
+
+/* ── BUTTONS ── */
+.btn{border:none;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;padding:7px 16px;border-radius:4px;cursor:pointer;transition:.14s;display:inline-flex;align-items:center;gap:5px;}
+.bp{background:var(--acc);color:#000;}.bp:hover{filter:brightness(1.1);transform:translateY(-1px);}
+.bs{background:var(--blue);color:#fff;}.bs:hover{filter:brightness(1.12);}
+.bg{background:var(--grn);color:#000;}.bg:hover{filter:brightness(1.1);}
+.bo{background:transparent;border:1px solid var(--bord);color:var(--lbl);}.bo:hover{border-color:var(--acc);color:var(--acc);}
+.brow{display:flex;gap:7px;margin-top:11px;flex-wrap:wrap;}
+
+/* ── RESULTS ── */
+.rg{display:grid;grid-template-columns:repeat(auto-fill,minmax(145px,1fr));gap:9px;margin-top:12px;}
+.ri{background:var(--inp);border:1px solid var(--bord);border-radius:6px;padding:10px 12px;transition:.14s;}
+.ri:hover{border-color:var(--acc);}
+.rl{font-size:8.5px;color:var(--mut);letter-spacing:1px;text-transform:uppercase;margin-bottom:3px;}
+.rv{font-family:'DM Mono',monospace;font-size:15px;font-weight:500;color:var(--acc);}
+.rv.b{color:var(--blue);}.rv.g{color:var(--grn);}.rv.r{color:var(--red);}
+.ru{font-size:8.5px;color:var(--mut);margin-left:2px;}
+
+/* ── BADGE ── */
+.badge{display:inline-flex;align-items:center;gap:2px;font-size:9px;font-weight:700;padding:2px 7px;border-radius:10px;letter-spacing:.3px;}
+.bok{background:rgba(46,212,122,.12);color:var(--grn);border:1px solid rgba(46,212,122,.3);}
+.bnok{background:rgba(232,72,72,.12);color:var(--red);border:1px solid rgba(232,72,72,.3);}
+.binfo{background:rgba(74,144,232,.12);color:var(--blue);border:1px solid rgba(74,144,232,.3);}
+.bwarn{background:rgba(240,168,48,.12);color:var(--acc);border:1px solid rgba(240,168,48,.3);}
+
+/* ── TABLE ── */
+.dt{width:100%;border-collapse:collapse;font-size:11px;}
+.dt th{background:var(--inp);color:var(--mut);text-transform:uppercase;letter-spacing:.8px;font-size:8.5px;padding:6px 9px;text-align:left;border-bottom:1px solid var(--bord);}
+.dt td{padding:6px 9px;border-bottom:1px solid rgba(26,34,56,.35);}
+.dt tr:hover td{background:rgba(128,128,128,.03);}
+.mono{font-family:'DM Mono',monospace;color:var(--acc);}
+.mono.b{color:var(--blue);}.mono.g{color:var(--grn);}.mono.r{color:var(--red);}
+
+/* ── TABS ── */
+.tabs{display:flex;border-bottom:1px solid var(--bord);margin-bottom:14px;flex-wrap:wrap;}
+.tb{background:none;border:none;color:var(--lbl);font-family:'DM Sans',sans-serif;font-size:11.5px;padding:7px 13px;cursor:pointer;border-bottom:2px solid transparent;transition:.13s;margin-bottom:-1px;}
+.tb.on{color:var(--acc);border-bottom-color:var(--acc);}
+.tb:hover:not(.on){color:var(--txt);}
+.tp{display:none;}.tp.on{display:block;}
+
+/* ── MISC ── */
+.div{height:1px;background:var(--bord);margin:12px 0;}
+.fbox{background:var(--inp);border:1px solid var(--bord);border-left:3px solid var(--blue);border-radius:5px;padding:9px 12px;font-family:'DM Mono',monospace;font-size:10px;color:var(--blue);margin:7px 0;line-height:1.9;overflow-x:auto;white-space:pre;}
+.alert{border-radius:5px;padding:8px 12px;font-size:10.5px;margin:6px 0;display:flex;align-items:flex-start;gap:7px;}
+.aw{background:rgba(240,168,48,.08);border:1px solid rgba(240,168,48,.22);color:var(--acc);}
+.ai{background:rgba(74,144,232,.08);border:1px solid rgba(74,144,232,.22);color:var(--blue);}
+.ag{background:rgba(46,212,122,.08);border:1px solid rgba(46,212,122,.22);color:var(--grn);}
+.ae{background:rgba(232,72,72,.08);border:1px solid rgba(232,72,72,.22);color:var(--red);}
+.chip{background:var(--inp);border:1px solid var(--bord);border-radius:12px;padding:3px 10px;font-size:10px;color:var(--lbl);}
+.chip strong{color:var(--acc);}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;}
+
+/* ── PROGRESS BAR ── */
+.pb{height:5px;background:var(--bord);border-radius:3px;margin-top:3px;overflow:hidden;}
+.pbf{height:100%;border-radius:3px;transition:width .4s;}
+.pbf.ok{background:var(--grn);}.pbf.warn{background:var(--acc);}.pbf.bad{background:var(--red);}
+
+/* ── KPI CARDS ── */
+.kpis{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:11px;margin-bottom:18px;}
+.kpi{background:var(--card);border:1px solid var(--bord);border-radius:8px;padding:13px 15px;}
+.kpi-l{font-size:8.5px;color:var(--mut);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:4px;}
+.kpi-v{font-family:'Bebas Neue',sans-serif;font-size:26px;line-height:1;color:var(--acc);}
+.kpi-v.b{color:var(--blue);}.kpi-v.g{color:var(--grn);}
+.kpi-u{font-size:9.5px;color:var(--lbl);}
+
+/* ── 3D SCHEMA ── */
+.schema3d{background:var(--inp);border:1px solid var(--bord);border-radius:8px;overflow:hidden;}
+canvas.c3{cursor:grab;display:block;width:100%;background:transparent;}
+
+/* ── SCENARIO ── */
+.sce-wrap{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.sce-panel{background:var(--card);border:1px solid var(--bord);border-radius:8px;padding:14px;}
+.sce-badge{font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:2px;padding:2px 8px;border-radius:3px;margin-bottom:10px;display:inline-block;}
+.sce-A{background:var(--blue);color:#fff;}.sce-B{background:var(--pur);color:#fff;}
+
+/* ── TOAST ── */
+#toast{position:fixed;bottom:18px;right:18px;z-index:999;display:flex;flex-direction:column;gap:6px;pointer-events:none;}
+.ti{background:var(--surf);border:1px solid var(--bord);border-radius:5px;padding:9px 13px;font-size:11.5px;color:var(--txt);box-shadow:0 4px 14px var(--shadow);animation:tin .18s ease;max-width:260px;}
+.ti.ok{border-left:3px solid var(--grn);}.ti.warn{border-left:3px solid var(--acc);}.ti.err{border-left:3px solid var(--red);}
+@keyframes tin{from{opacity:0;transform:translateX(15px)}to{opacity:1;transform:translateX(0)}}
+
+/* ── MODAL ── */
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:600;align-items:center;justify-content:center;}
+.modal-bg.on{display:flex;}
+.modal{background:var(--surf);border:1px solid var(--bord);border-radius:10px;padding:22px;max-width:520px;width:90%;max-height:80vh;overflow-y:auto;}
+.modal h2{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px;margin-bottom:14px;color:var(--acc);}
+.modal-close{float:right;background:none;border:none;color:var(--mut);font-size:18px;cursor:pointer;}
+
+::-webkit-scrollbar{width:3px;height:3px;}
+::-webkit-scrollbar-thumb{background:var(--bord);border-radius:2px;}
+
+/* ── LOADING STATE ── */
+.btn.loading{opacity:.7;pointer-events:none;position:relative;}
+.btn.loading::after{content:'';display:inline-block;width:10px;height:10px;border:2px solid currentColor;border-top-color:transparent;border-radius:50%;animation:spin .6s linear infinite;margin-left:4px;}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ── FOCUS VISIBLE ── */
+button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--acc);outline-offset:2px;}
+
+/* ── RESPONSIVE ── */
+@media(max-width:760px){nav{display:none;}main{max-width:100%;padding:12px;}.g2,.g3,.g4{grid-template-columns:1fr;}.s2,.s3,.s4{grid-column:span 1;}.sce-wrap{grid-template-columns:1fr;}}
+
+/* ── PRINT amélioré ── */
+@media print{
+  nav,header .htools,header .lang-sw,.brow,.btn,.modal-bg,#toast{display:none!important;}
+  body,main,.card,.ri{background:#fff!important;color:#000!important;}
+  main{max-width:100%;padding:0;}.wrap{display:block;}
+  .panel{display:block!important;}
+  .fbox{background:#f0f4ff!important;color:#226!important;border-left:3px solid #4a90e8!important;}
+  .mono{color:#005!important;}.rv{color:#005!important;}
+  .dt th{background:#eee!important;}
+  header{position:static!important;box-shadow:none!important;border-bottom:2px solid #ccc!important;}
+  .kpi-v{color:#000!important;font-size:20px!important;}
+  .badge{border:1px solid #ccc!important;color:#000!important;background:#f0f0f0!important;}
+  @page{margin:1.5cm;size:A4;}
+}
+</style>
+</head>
+<body>
+<div id="toast"></div>
+
+<!-- MODAL HELP -->
+<div class="modal-bg" id="helpModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeHelp()">✕</button>
+    <h2 id="helpTitle">AIDE</h2>
+    <div id="helpBody"></div>
+  </div>
+</div>
+
+<header>
+  <div class="logo">RPOA</div>
+  <h1 data-t="htitle">CALCUL SISMIQUE — APPUIS DE PONT</h1>
+  <span style="font-size:9px;color:var(--mut);background:var(--inp);border:1px solid var(--bord);border-radius:3px;padding:2px 6px;font-family:'DM Mono',monospace">v5</span>
+  <div class="hsep"></div>
+  <div class="htools">
+    <div class="lang-sw"><button onclick="setLang('fr')" id="bFR" class="on">FR</button><button onclick="setLang('en')" id="bEN">EN</button></div>
+    <button class="hbtn" onclick="toggleTheme()" id="themeBtn">🌙</button>
+    <button class="hbtn" onclick="saveProject()">💾 <span data-t="h-save">Sauvegarder</span></button>
+    <button class="hbtn" onclick="$('fileIn').click()">📂 <span data-t="h-open">Ouvrir</span></button>
+    <input type="file" id="fileIn" accept=".json" style="display:none" onchange="loadProject(event)">
+    <button class="hbtn bp" onclick="exportPDF()">📄 <span data-t="h-pdf">Rapport PDF</span></button>
+    <button class="hbtn" onclick="exportCSV()" title="Exporter résultats CSV">📊 CSV</button>
+  </div>
+</header>
+
+<div class="wrap">
+<nav id="nav">
+  <div class="nsec" data-t="n0">Accueil</div>
+  <a class="nb on" onclick="go('dash')" data-p="dash"><span class="ni">🏠</span><span data-t="n-dash">Tableau de bord</span><span class="nstat" id="ns-dash"></span></a>
+
+  <div class="nsec" data-t="n1">Spectres &amp; Analyse</div>
+  <a class="nb" onclick="go('spec')" data-p="spec"><span class="ni">📈</span><span data-t="n-spec">Spectre de réponse</span><span class="nstat" id="ns-spec"></span></a>
+  <a class="nb" onclick="go('sens')" data-p="sens"><span class="ni">📊</span><span data-t="n-sens">Sensibilité</span><span class="nstat" id="ns-sens"></span></a>
+  <a class="nb" onclick="go('sce')" data-p="sce"><span class="ni">🔁</span><span data-t="n-sce">Multi-scénarios</span><span class="nstat" id="ns-sce"></span></a>
+
+  <div class="nsec" data-t="n2">Pont à Poutres BP</div>
+  <a class="nb" onclick="go('pou')" data-p="pou"><span class="ni">🔩</span><span data-t="n-pou">Données &amp; Raideurs</span><span class="nstat" id="ns-pou"></span></a>
+  <a class="nb" onclick="go('pou2')" data-p="pou2"><span class="ni">⚡</span><span data-t="n-pou2">Forces sismiques</span><span class="nstat" id="ns-pou2"></span></a>
+
+  <div class="nsec" data-t="n3">Pont à Voussoirs BP</div>
+  <a class="nb" onclick="go('sch')" data-p="sch"><span class="ni">📐</span><span data-t="n-sch">Schéma 3D</span><span class="nstat" id="ns-sch"></span></a>
+  <a class="nb" onclick="go('vou')" data-p="vou"><span class="ni">🏗️</span><span data-t="n-vou">Données &amp; Raideurs</span><span class="nstat" id="ns-vou"></span></a>
+  <a class="nb" onclick="go('vlong')" data-p="vlong"><span class="ni">➡️</span><span data-t="n-vlong">Séisme longitudinal</span><span class="nstat" id="ns-vlong"></span></a>
+  <a class="nb" onclick="go('vtrans')" data-p="vtrans"><span class="ni">↕️</span><span data-t="n-vtrans">Séisme transversal</span><span class="nstat" id="ns-vtrans"></span></a>
+  <a class="nb" onclick="go('vvert')" data-p="vvert"><span class="ni">⬆️</span><span data-t="n-vvert">Séisme vertical</span><span class="nstat" id="ns-vvert"></span></a>
+
+  <div class="nsec" data-t="n4">Vérifications</div>
+  <a class="nb" onclick="go('app')" data-p="app"><span class="ni">🔵</span><span data-t="n-app">Appareils d'appui</span><span class="nstat" id="ns-app"></span></a>
+  <a class="nb" onclick="go('effh')" data-p="effh"><span class="ni">🔄</span><span data-t="n-effh">Efforts horizontaux</span><span class="nstat" id="ns-effh"></span></a>
+  <a class="nb" onclick="go('sum')" data-p="sum"><span class="ni">📋</span><span data-t="n-sum">Récapitulatif</span><span class="nstat" id="ns-sum"></span></a>
+
+  <div class="nsec">Méthode Avancée</div>
+  <a class="nb" onclick="go('multi')" data-p="multi"><span class="ni">🌊</span><span>Analyse Multimodale</span><span class="nstat" id="ns-multi"></span></a>
+  <a class="nb" onclick="go('crit')" data-p="crit"><span class="ni">✅</span><span>Critères Régularité</span><span class="nstat" id="ns-crit"></span></a>
+
+  <div class="nsec" data-t="n5">Référence</div>
+  <a class="nb" onclick="go('ref')" data-p="ref"><span class="ni">📚</span><span data-t="n-ref">Tableaux RPOA</span><span class="nstat" id="ns-ref"></span></a>
+</nav>
+
+<main id="main">
+
+<!-- ═══════════════════════ DASHBOARD ═══════════════════════ -->
+<div class="panel on" id="p-dash">
+  <div class="ptitle" data-t="d-title">TABLEAU DE BORD</div>
+  <div class="psub" data-t="d-sub">Vue d'ensemble — Statut des modules et résultats clés</div>
+  <div class="kpis">
+    <div class="kpi"><div class="kpi-l" data-t="kT">Période fond.</div><div class="kpi-v" id="kT">—</div><div class="kpi-u">T (s)</div></div>
+    <div class="kpi"><div class="kpi-l" data-t="kF">Force sismique</div><div class="kpi-v b" id="kF">—</div><div class="kpi-u">KN / MN</div></div>
+    <div class="kpi"><div class="kpi-l" data-t="kD">Déplacement</div><div class="kpi-v g" id="kD">—</div><div class="kpi-u">m</div></div>
+    <div class="kpi"><div class="kpi-l" data-t="kApp">Appareils d'appui</div><div class="kpi-v" id="kApp">—</div><div class="kpi-u" id="kAppU">vérifications</div></div>
+  </div>
+  <div class="g2">
+    <div class="card al">
+      <div class="ctitle ca" data-t="d-status">Statut des modules</div>
+      <table class="dt" id="statusTable">
+        <tbody>
+          <tr><td data-t="st-spec">Spectre de réponse</td><td id="st-spec"><span class="badge binfo">En attente</span></td></tr>
+          <tr><td data-t="st-pou">Pont à poutres</td><td id="st-pou"><span class="badge binfo">En attente</span></td></tr>
+          <tr><td data-t="st-vou">Pont à voussoirs</td><td id="st-vou"><span class="badge binfo">En attente</span></td></tr>
+          <tr><td data-t="st-app">Appareils d'appui</td><td id="st-app"><span class="badge binfo">En attente</span></td></tr>
+          <tr><td data-t="st-sce">Multi-scénarios</td><td id="st-sce"><span class="badge binfo">En attente</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="card bl">
+      <div class="ctitle cb" data-t="d-info">Informations du projet</div>
+      <div class="fr">
+        <div class="field"><label data-t="fi-nom">Nom du projet</label><input type="text" id="fi_nom" placeholder="Ex: Pont sur Oued Sayoud" style="font-family:'DM Sans',sans-serif" oninput="updateProjectHeader()"></div>
+        <div class="field"><label data-t="fi-ing">Ingénieur</label><input type="text" id="fi_ing" placeholder="Nom" style="font-family:'DM Sans',sans-serif"></div>
+      </div>
+      <div class="fr">
+        <div class="field"><label data-t="fi-date">Date</label><input type="date" id="fi_date" style="font-family:'DM Sans',sans-serif"></div>
+        <div class="field"><label data-t="fi-ref">Référence</label><input type="text" id="fi_ref" placeholder="Réf." style="font-family:'DM Sans',sans-serif"></div>
+      </div>
+      <div class="alert ai" style="font-size:10px;margin-top:6px">
+        💡 <span data-t="d-tip">Remplissez les informations du projet — elles apparaissent dans le rapport PDF.</span>
+      </div>
+      <div style="margin-top:10px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+          <span style="font-size:9px;color:var(--lbl);text-transform:uppercase;letter-spacing:1px">Avancement</span>
+          <span id="progPct" style="font-size:10px;color:var(--acc);font-family:'DM Mono',monospace">0%</span>
+        </div>
+        <div class="pb"><div class="pbf ok" id="progBar" style="width:0%"></div></div>
+      </div>
+    </div>
+  </div>
+  <div class="div"></div>
+  <div class="alert ai">
+    🎓 <span data-t="d-cite">Outil basé sur RPOA 2008 — Mémoire de K. Amira, Univ. Mohamed Seddik Benyahia Jijel (2022/2023)</span>
+  </div>
+  <div class="brow" style="margin-top:8px">
+    <button class="btn bp" onclick="runAll()">⚡ <span>TOUT CALCULER</span></button>
+    <button class="btn bo" onclick="resetAll()">🔄 <span>Réinitialiser</span></button>
+  </div>
+  <div class="g3" style="margin-top:14px">
+    <div class="card bl" style="cursor:pointer" onclick="go('crit')">
+      <div class="ctitle cb">✅ Critères de Régularité</div>
+      <div style="font-size:10.5px;color:var(--lbl)">Vérifier les 4 conditions RPOA §1.7.1.1 avant d'appliquer la méthode monomodale.</div>
+      <div style="margin-top:8px;font-size:10px;color:var(--blue);font-weight:600">→ Ouvrir ›</div>
+    </div>
+    <div class="card pl" style="cursor:pointer" onclick="go('multi')">
+      <div class="ctitle cp">🌊 Analyse Multimodale</div>
+      <div style="font-size:10.5px;color:var(--lbl)">Méthode de Rayleigh pour tablier flexible — ponts irréguliers — RPOA §1.7.1.2b.</div>
+      <div style="margin-top:8px;font-size:10px;color:var(--pur);font-weight:600">→ Ouvrir ›</div>
+    </div>
+    <div class="card gl" style="cursor:pointer" onclick="exportCSV()">
+      <div class="ctitle cg">📊 Export CSV</div>
+      <div style="font-size:10.5px;color:var(--lbl)">Exporter tous les résultats calculés dans un fichier Excel/CSV.</div>
+      <div style="margin-top:8px;font-size:10px;color:var(--grn);font-weight:600">→ Télécharger ›</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════ SPECTRE ═══════════════════════ -->
+<div class="panel" id="p-spec">
+  <div class="ptitle" data-t="sp-title">SPECTRE DE RÉPONSE</div>
+  <div class="psub" data-t="sp-sub">Composantes horizontale, verticale et spectre de dimensionnement — RPOA Art. 1.5</div>
+  <div class="g2">
+    <div class="card">
+      <div class="ctitle ca" data-t="sp-params">Paramètres sismiques</div>
+      <div class="fr">
+        <div class="field"><label><span data-t="sp-cl">Classe du pont</span><span class="tip">?<div class="tt">G1: Stratégique (ponts sur voies express) | G2: Important | G3: Importance moyenne</div></span></label>
+          <select id="sp_cl"><option value="1" data-t="g1o">Groupe 1 — Stratégique</option><option value="2" data-t="g2o">Groupe 2 — Important</option><option value="3" selected data-t="g3o">Groupe 3 — Moyen</option></select></div>
+        <div class="field"><label><span data-t="sp-zone">Zone sismique</span><span class="tip">?<div class="tt">Zone 0: négligeable | I: faible | IIa: modérée | IIb: élevée | III: très élevée (Algérie N-O)</div></span></label>
+          <select id="sp_zn"><option value="0">Zone 0</option><option value="I">Zone I — Faible</option><option value="IIa" selected>Zone IIa — Modérée</option><option value="IIb">Zone IIb — Élevée</option><option value="III">Zone III — Très élevée</option></select></div>
+      </div>
+      <div class="fr">
+        <div class="field"><label><span data-t="sp-site">Catégorie de site</span><span class="tip">?<div class="tt">S1: rocheux Vs≥800 | S2: ferme Vs≥400 | S3: meuble Vs≥200 | S4: très meuble Vs&lt;200 m/s</div></span></label>
+          <select id="sp_si"><option value="S1">S1 — Rocheux</option><option value="S2" selected>S2 — Ferme</option><option value="S3">S3 — Meuble</option><option value="S4">S4 — Très meuble</option></select></div>
+        <div class="field"><label><span data-t="sp-xi">Amortissement ξ (%)</span><span class="tip">?<div class="tt">BP: 2% | Béton armé: 5% | Élastomère: 7%. Formule: η = √(7/(2+ξ))</div></span></label>
+          <input type="number" id="sp_xi" value="5" min="1" max="20" step=".5" oninput="chk(this,1,20)"></div>
+      </div>
+      <div class="fr">
+        <div class="field"><label data-t="sp-Tq">Période T à évaluer (s)</label><input type="number" id="sp_Tq" value="0.40" step=".01" min=".01" oninput="chk(this,.01,10)"></div>
+        <div class="field"><label><span data-t="sp-q">Coeff. comportement q</span><span class="tip">?<div class="tt">q=1 pour ponts isolés (appareils élastomère), sinon selon RPOA Art. 1.7</div></span></label>
+          <input type="number" id="sp_q" value="1" step=".5" min="1"></div>
+      </div>
+      <div class="brow"><button class="btn bp" onclick="doSpec()">⚡ <span data-t="btn-calc">CALCULER</span></button><button class="btn bo" onclick="showHelp('spec')" data-t="btn-help">❓ Aide</button></div>
+    </div>
+    <div class="card">
+      <div class="ctitle ca" data-t="sp-res">Paramètres calculés</div>
+      <div class="rg" style="grid-template-columns:repeat(3,1fr)">
+        <div class="ri"><div class="rl">A</div><div class="rv" id="rA">—</div></div>
+        <div class="ri"><div class="rl">S</div><div class="rv" id="rS">—</div></div>
+        <div class="ri"><div class="rl">η</div><div class="rv" id="rEta">—</div></div>
+        <div class="ri"><div class="rl">T1 (s)</div><div class="rv" id="rT1">—</div></div>
+        <div class="ri"><div class="rl">T2 (s)</div><div class="rv" id="rT2">—</div></div>
+        <div class="ri"><div class="rl">α</div><div class="rv" id="rAlpha">—</div></div>
+      </div>
+      <div class="div"></div>
+      <div class="rg" style="grid-template-columns:1fr">
+        <div class="ri"><div class="rl" data-t="rSaeh">Saᵉʰ(T) — horizontal</div><div class="rv" id="rSaeh">— <span class="ru">m/s²</span></div></div>
+        <div class="ri"><div class="rl" data-t="rSaev">Saᵉᵛ(T) — vertical</div><div class="rv b" id="rSaev">— <span class="ru">m/s²</span></div></div>
+        <div class="ri"><div class="rl" data-t="rSaed">Saᵈ(T) — dimens.</div><div class="rv g" id="rSaed">— <span class="ru">m/s²</span></div></div>
+      </div>
+    </div>
+  </div>
+  <div class="div"></div>
+  <div class="tabs">
+    <button class="tb on" onclick="stab(this,'tH')" data-t="tab-H">Horizontal</button>
+    <button class="tb" onclick="stab(this,'tV')" data-t="tab-V">Vertical</button>
+    <button class="tb" onclick="stab(this,'tD')" data-t="tab-D">Dimensionnement</button>
+    <button class="tb" onclick="stab(this,'tAll')" data-t="tab-all">Comparaison 4 zones</button>
+  </div>
+  <div class="tp on" id="tH"><canvas id="cH" height="230" style="width:100%;border-radius:6px;border:1px solid var(--bord)"></canvas></div>
+  <div class="tp" id="tV"><canvas id="cV" height="230" style="width:100%;border-radius:6px;border:1px solid var(--bord)"></canvas></div>
+  <div class="tp" id="tD"><canvas id="cD" height="230" style="width:100%;border-radius:6px;border:1px solid var(--bord)"></canvas></div>
+  <div class="tp" id="tAll"><canvas id="cAll" height="250" style="width:100%;border-radius:6px;border:1px solid var(--bord)"></canvas></div>
+</div>
+
+<!-- ═══════════════════════ SENSIBILITÉ ═══════════════════ -->
+<div class="panel" id="p-sens">
+  <div class="ptitle" data-t="se-title">ANALYSE DE SENSIBILITÉ</div>
+  <div class="psub" data-t="se-sub">Variation de Saᵉʰ selon zone sismique, site et amortissement</div>
+  <div class="g2">
+    <div class="card">
+      <div class="ctitle ca">Paramètres</div>
+      <div class="fr">
+        <div class="field"><label data-t="se-cl">Classe</label><select id="se_cl"><option value="1">G1</option><option value="2">G2</option><option value="3" selected>G3</option></select></div>
+        <div class="field"><label data-t="se-T">Période T (s)</label><input type="number" id="se_T" value="0.40" step=".01"></div>
+      </div>
+      <div class="fr">
+        <div class="field"><label data-t="se-xi">ξ (%)</label><input type="number" id="se_xi" value="5" min="1" max="20"></div>
+      </div>
+      <div class="brow"><button class="btn bp" onclick="doSens()">⚡ <span data-t="btn-analyze">ANALYSER</span></button></div>
+    </div>
+    <div class="card"><div class="ctitle cb" data-t="se-tip">Interprétation</div>
+      <div class="fbox">Saᵉʰ ↑ quand zone sismique ↑
+Saᵉʰ ↑ quand site plus meuble (S4>S3>S2>S1)
+Saᵉʰ ↓ quand amortissement ξ ↑ (η = √(7/(2+ξ)))
+Comparez : T plateau / hors plateau</div>
+    </div>
+  </div>
+  <div id="sensRes"><div class="alert ai" data-t="wait">⟳ Lancez l'analyse.</div></div>
+</div>
+
+<!-- ═══════════════════════ MULTI-SCÉNARIOS ═══════════════ -->
+<div class="panel" id="p-sce">
+  <div class="ptitle" data-t="sc-title">COMPARAISON MULTI-SCÉNARIOS</div>
+  <div class="psub" data-t="sc-sub">Comparez deux configurations côte à côte</div>
+  <div class="sce-wrap">
+    <div class="sce-panel">
+      <div class="sce-badge sce-A">SCÉNARIO A</div>
+      <div class="fr">
+        <div class="field"><label data-t="sc-cl">Classe</label><select id="sA_cl"><option value="1">G1</option><option value="2">G2</option><option value="3" selected>G3</option></select></div>
+        <div class="field"><label data-t="sc-zone">Zone</label><select id="sA_zn"><option value="I">I</option><option value="IIa" selected>IIa</option><option value="IIb">IIb</option><option value="III">III</option></select></div>
+      </div>
+      <div class="fr">
+        <div class="field"><label>Site</label><select id="sA_si"><option value="S1">S1</option><option value="S2" selected>S2</option><option value="S3">S3</option><option value="S4">S4</option></select></div>
+        <div class="field"><label>ξ (%)</label><input type="number" id="sA_xi" value="5" min="1"></div>
+      </div>
+      <div class="fr">
+        <div class="field"><label data-t="sc-M">Masse M (t)</label><input type="number" id="sA_M" value="462"></div>
+        <div class="field"><label data-t="sc-K">Raideur K (KN/m)</label><input type="number" id="sA_K" value="171441"></div>
+      </div>
+    </div>
+    <div class="sce-panel">
+      <div class="sce-badge sce-B">SCÉNARIO B</div>
+      <div class="fr">
+        <div class="field"><label>Classe</label><select id="sB_cl"><option value="1">G1</option><option value="2">G2</option><option value="3" selected>G3</option></select></div>
+        <div class="field"><label>Zone</label><select id="sB_zn"><option value="I">I</option><option value="IIa">IIa</option><option value="IIb">IIb</option><option value="III" selected>III</option></select></div>
+      </div>
+      <div class="fr">
+        <div class="field"><label>Site</label><select id="sB_si"><option value="S1">S1</option><option value="S2">S2</option><option value="S3" selected>S3</option><option value="S4">S4</option></select></div>
+        <div class="field"><label>ξ (%)</label><input type="number" id="sB_xi" value="5" min="1"></div>
+      </div>
+      <div class="fr">
+        <div class="field"><label>Masse M (t)</label><input type="number" id="sB_M" value="462"></div>
+        <div class="field"><label>Raideur K (KN/m)</label><input type="number" id="sB_K" value="171441"></div>
+      </div>
+    </div>
+  </div>
+  <div class="brow" style="margin-top:12px"><button class="btn bp" onclick="doSce()">⚡ <span data-t="btn-compare">COMPARER</span></button></div>
+  <div id="sceRes" style="margin-top:14px"><div class="alert ai" data-t="wait">⟳ Configurez et comparez.</div></div>
+</div>
+
+<!-- ═══════════════════════ PONT À POUTRES ════════════════ -->
+<div class="panel" id="p-pou">
+  <div class="ptitle" data-t="pou-title">PONT À POUTRES — DONNÉES</div>
+  <div class="psub" data-t="pou-sub">Masse, raideur piles (nEI/h³), appareils d'appui — RPOA Art. 1.6</div>
+  <div class="g2">
+    <div class="card">
+      <div class="ctitle ca" data-t="pou-geo">Géométrie</div>
+      <div class="fr">
+        <div class="field"><label><span data-t="pou-Gt">Poids tablier G_tab (t)</span><span class="tip">?<div class="tt">Poids propre du tablier par travée (poutres + dalle)</div></span></label><input type="number" id="pu_Gt" value="307.15" oninput="chk(this,1)"></div>
+        <div class="field"><label data-t="pou-nt">Nombre de travées</label><input type="number" id="pu_nt" value="2" min="1"></div>
+      </div>
+      <div class="fr">
+        <div class="field"><label data-t="pou-L">Longueur L (m)</label><input type="number" id="pu_L" value="40" oninput="chk(this,1)"></div>
+        <div class="field"><label data-t="pou-B">Largeur B (m)</label><input type="number" id="pu_B" value="10.2" oninput="chk(this,1)"></div>
+      </div>
+      <div class="fr">
+        <div class="field"><label><span data-t="pou-Gp">Poids piles (t)</span><span class="tip">?<div class="tt">Chevêtre + ½ fût supérieur de chaque pile</div></span></label><input type="number" id="pu_Gp" value="75.66" oninput="chk(this,0)"></div>
+        <div class="field"><label data-t="pou-np">Nombre de piles</label><input type="number" id="pu_np" value="1" min="1"></div>
+      </div>
+      <div class="ctitle ca" style="margin-top:4px" data-t="pou-fut">Fûts circulaires</div>
+      <div class="fr3">
+        <div class="field"><label data-t="pou-nf">Nbre fûts n</label><input type="number" id="pu_nf" value="3" min="1"></div>
+        <div class="field"><label>D (m)</label><input type="number" id="pu_D" value="1.2" step=".01" oninput="chk(this,.1)"></div>
+        <div class="field"><label>h (m)</label><input type="number" id="pu_h" value="6.48" step=".01" oninput="chk(this,.1)"></div>
+      </div>
+      <div class="fr">
+        <div class="field"><label data-t="pou-Eb">Eb (KN/m²)</label><input type="number" id="pu_Eb" value="32000000"></div>
+        <div class="field"><label><span data-t="pou-enc">Encastrement</span><span class="tip">?<div class="tt">Articulé tête → 3EI/h³ | Encastré tête → 12EI/h³</div></span></label><select id="pu_enc"><option value="3" selected>Articulé tête (3EI/h³)</option><option value="12">Encastré tête (12EI/h³)</option></select></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="ctitle cb" data-t="pou-app">Appareils d'appui</div>
+      <div class="fr">
+        <div class="field"><label data-t="pou-nap">Nbre app/pile</label><input type="number" id="pu_nap" value="14" min="1"></div>
+        <div class="field"><label data-t="pou-nac">Nbre app/culée</label><input type="number" id="pu_nac" value="7" min="1"></div>
+      </div>
+      <div class="fr3">
+        <div class="field"><label>a (cm)</label><input type="number" id="pu_a" value="30" oninput="chk(this,1)"></div>
+        <div class="field"><label>b (cm)</label><input type="number" id="pu_b" value="20" oninput="chk(this,1)"></div>
+        <div class="field"><label>e (cm)</label><input type="number" id="pu_e" value="5" step=".5" oninput="chk(this,.5)"></div>
+      </div>
+      <div class="fr"><div class="field"><label data-t="pou-G">G app (KN/m³)</label><input type="number" id="pu_G" value="1200"></div></div>
+      <div class="ctitle cb" style="margin-top:4px">Sismique</div>
+      <div class="fr">
+        <div class="field"><label>Classe</label><select id="pu_cl"><option value="1">G1</option><option value="2">G2</option><option value="3" selected>G3</option></select></div>
+        <div class="field"><label>Zone</label><select id="pu_zn"><option value="0">0</option><option value="I">I</option><option value="IIa" selected>IIa</option><option value="IIb">IIb</option><option value="III">III</option></select></div>
+      </div>
+      <div class="fr">
+        <div class="field"><label>Site</label><select id="pu_si"><option value="S1">S1</option><option value="S2" selected>S2</option><option value="S3">S3</option><option value="S4">S4</option></select></div>
+        <div class="field"><label>ξ (%)</label><input type="number" id="pu_xi" value="5" min="1"></div>
+      </div>
+      <div class="brow">
+        <button class="btn bp" onclick="doPou()">⚡ <span data-t="btn-calc">CALCULER</span></button>
+        <button class="btn bs" onclick="doPou();go('pou2')" data-t="btn-res">→ Résultats</button>
+        <button class="btn bo" onclick="showHelp('pou')" data-t="btn-help">❓</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="panel" id="p-pou2">
+  <div class="ptitle" data-t="pou2-title">PONT À POUTRES — RÉSULTATS</div>
+  <div class="psub" data-t="pou2-sub">Forces sismiques longitudinale et transversale</div>
+  <div id="pouRes"><div class="alert ai" data-t="wait">⟳ Lancez le calcul depuis Données.</div></div>
+</div>
+
+<!-- ═══════════════════════ 3D SCHEMA ═══════════════════ -->
+<div class="panel" id="p-sch">
+  <div class="ptitle" data-t="sch-title">SCHÉMA 3D DU PONT</div>
+  <div class="psub" data-t="sch-sub">Visualisation interactive — Cliquez et faites glisser pour tourner</div>
+  <div class="tabs">
+    <button class="tb on" onclick="stab(this,'s3Pou')" data-t="sch-pou">Pont à poutres</button>
+    <button class="tb" onclick="stab(this,'s3Vou')" data-t="sch-vou">Pont à voussoirs</button>
+    <button class="tb" onclick="stab(this,'s3Mod')" data-t="sch-mod">Modèle dynamique</button>
+  </div>
+  <div class="tp on" id="s3Pou"><div class="schema3d"><canvas class="c3" id="cv3Pou" height="320"></canvas></div><div class="alert ai" style="margin-top:8px;font-size:10px" data-t="sch-drag">🖱️ Cliquez et faites glisser pour tourner — Molette pour zoomer</div></div>
+  <div class="tp" id="s3Vou"><div class="schema3d"><canvas class="c3" id="cv3Vou" height="320"></canvas></div></div>
+  <div class="tp" id="s3Mod"><div class="schema3d"><canvas class="c3" id="cv3Mod" height="300"></canvas></div></div>
+</div>
+
+<!-- ═══════════════════════ VOUSSOIR DATA ══════════════ -->
+<div class="panel" id="p-vou">
+  <div class="ptitle" data-t="vou-title">PONT À VOUSSOIRS — DONNÉES</div>
+  <div class="psub" data-t="vou-sub">Raideur pile voile (12EI/h³), appareils, condition monomodale</div>
+  <div class="g2">
+    <div class="card">
+      <div class="ctitle ca" data-t="vou-gen">Données générales</div>
+      <div class="fr">
+        <div class="field"><label data-t="vou-Mt">Mt tablier (t)</label><input type="number" id="vou_Mt" value="1241" oninput="chk(this,1)"></div>
+        <div class="field"><label data-t="vou-Mp">Mp piles (t)</label><input type="number" id="vou_Mp" value="157.93" oninput="chk(this,0)"></div>
+      </div>
+      <div class="fr">
+        <div class="field"><label>L (m)</label><input type="number" id="vou_L" value="70"></div>
+        <div class="field"><label>B (m)</label><input type="number" id="vou_B" value="11"></div>
+      </div>
+      <div class="fr">
+        <div class="field"><label data-t="vou-nt">Nbre travées</label><input type="number" id="vou_nt" value="2" min="1"></div>
+        <div class="field"><label>lt (m)</label><input type="number" id="vou_lt" value="35"></div>
+      </div>
+      <div class="fr">
+        <div class="field"><label>m1 (t)</label><input type="number" id="vou_m1" value="778.43"></div>
+        <div class="field"><label>mi (t)</label><input type="number" id="vou_mi" value="206.83"></div>
+      </div>
+      <div class="ctitle ca" style="margin-top:4px" data-t="vou-pile">Pile en voile</div>
+      <div class="fr3">
+        <div class="field"><label>h (m)</label><input type="number" id="vou_h" value="7.4" step=".1"></div>
+        <div class="field"><label>b (m)</label><input type="number" id="vou_bp" value="1.6" step=".1"></div>
+        <div class="field"><label>H (m)</label><input type="number" id="vou_Hp" value="5.6" step=".1"></div>
+      </div>
+      <div class="fr3">
+        <div class="field"><label>Iz (m⁴)</label><input type="number" id="vou_Iz" value="98.56" step=".01"></div>
+        <div class="field"><label>Iy (m⁴)</label><input type="number" id="vou_Iy" value="2.6" step=".01"></div>
+        <div class="field"><label>Eb (MN/m²)</label><input type="number" id="vou_Eb" value="32000"></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="ctitle cb" data-t="vou-app">Appareils d'appui</div>
+      <div class="fr">
+        <div class="field"><label data-t="vou-na">Nbre app/appui</label><input type="number" id="vou_na" value="2" min="1"></div>
+        <div class="field"><label>G (MN/m²)</label><input type="number" id="vou_Ga" value="1.2" step=".1"></div>
+      </div>
+      <div class="fr3">
+        <div class="field"><label>a (cm)</label><input type="number" id="vou_a" value="70"></div>
+        <div class="field"><label>b (cm)</label><input type="number" id="vou_ba" value="70"></div>
+        <div class="field"><label>e (cm)</label><input type="number" id="vou_ea" value="7"></div>
+      </div>
+      <div class="ctitle cb" style="margin-top:4px">Sismique</div>
+      <div class="fr">
+        <div class="field"><label>Classe</label><select id="vou_cl"><option value="1">G1</option><option value="2">G2</option><option value="3" selected>G3</option></select></div>
+        <div class="field"><label>Zone</label><select id="vou_zn"><option value="0">0</option><option value="I">I</option><option value="IIa">IIa</option><option value="IIb">IIb</option><option value="III" selected>III</option></select></div>
+      </div>
+      <div class="fr">
+        <div class="field"><label>Site</label><select id="vou_si"><option value="S1">S1</option><option value="S2" selected>S2</option><option value="S3">S3</option><option value="S4">S4</option></select></div>
+        <div class="field"><label>ξ (%)</label><input type="number" id="vou_xi" value="5"></div>
+      </div>
+      <div class="brow">
+        <button class="btn bp" onclick="doVou()">⚡ <span data-t="btn-calc">CALCULER</span></button>
+        <button class="btn bs" onclick="doVou();go('vlong')" data-t="btn-long">→ Longitudinal</button>
+      </div>
+    </div>
+  </div>
+  <div id="vouRaid"></div>
+</div>
+
+<div class="panel" id="p-vlong">
+  <div class="ptitle" data-t="vl-title">SÉISME LONGITUDINAL</div>
+  <div class="psub" data-t="vl-sub">Tablier rigide — Méthode monomodale — RPOA Art. 1.6.3</div>
+  <div id="vlRes"><div class="alert ai" data-t="wait">⟳ Calculez les raideurs d'abord.</div></div>
+</div>
+
+<div class="panel" id="p-vtrans">
+  <div class="ptitle" data-t="vt-title">SÉISME TRANSVERSAL</div>
+  <div class="psub" data-t="vt-sub">Méthode de Rayleigh — Modèle brochette — Gauss-Jordan</div>
+  <div class="card" style="margin-bottom:13px">
+    <div class="ctitle cp">Configuration</div>
+    <div class="fr3">
+      <div class="field"><label data-t="vt-nn">Nbre nœuds</label><input type="number" id="tr_nn" value="3" min="2" max="8"></div>
+      <div class="field"><label data-t="vt-mi">mi (t)</label><input type="number" id="tr_mi" value="670.5"></div>
+      <div class="field"><label data-t="vt-m1">m1 central (t)</label><input type="number" id="tr_m1" value="778.43"></div>
+    </div>
+    <div class="fr">
+      <div class="field"><label>K tablier (MN/m)</label><input type="number" id="tr_Kt" value="220.68" step=".01"></div>
+      <div class="field"><label>K pile (MN/m)</label><input type="number" id="tr_K1" value="10.5" step=".01"></div>
+    </div>
+    <div class="brow"><button class="btn bp" onclick="doTrans()">⚡ <span data-t="btn-calc">CALCULER</span></button></div>
+  </div>
+  <div id="vtRes"><div class="alert ai" data-t="wait">⟳ Configurez.</div></div>
+</div>
+
+<div class="panel" id="p-vvert">
+  <div class="ptitle" data-t="vv-title">SÉISME VERTICAL</div>
+  <div class="psub" data-t="vv-sub">Composante verticale ascendante — Flexion tablier BP</div>
+  <div class="card" style="margin-bottom:13px">
+    <div class="ctitle cg">Configuration</div>
+    <div class="fr3">
+      <div class="field"><label data-t="vv-nn">Nbre nœuds</label><input type="number" id="vt_nn" value="6" min="2" max="12"></div>
+      <div class="field"><label>mi (t)</label><input type="number" id="vt_mi" value="206.83"></div>
+      <div class="field"><label>Iy (m⁴)</label><input type="number" id="vt_Iy" value="2.6" step=".01"></div>
+    </div>
+    <div class="fr3">
+      <div class="field"><label>Eb (MN/m²)</label><input type="number" id="vt_Eb" value="32000"></div>
+      <div class="field"><label>L1 (m)</label><input type="number" id="vt_L1" value="5.83" step=".01"></div>
+      <div class="field"><label>L2 (m)</label><input type="number" id="vt_L2" value="11.67" step=".01"></div>
+    </div>
+    <div class="brow"><button class="btn bp" onclick="doVert()">⚡ <span data-t="btn-calc">CALCULER</span></button></div>
+  </div>
+  <div id="vvRes"><div class="alert ai" data-t="wait">⟳ Configurez.</div></div>
+</div>
+
+<!-- ═══════════════════════ APPAREILS ════════════════════ -->
+<div class="panel" id="p-app">
+  <div class="ptitle" data-t="app-title">APPAREILS D'APPUI — VÉRIFICATION</div>
+  <div class="psub" data-t="app-sub">9 conditions RPOA Art. 1.8.3 — Élastomère fretté</div>
+  <div class="g2">
+    <div class="card">
+      <div class="ctitle ca" data-t="app-dim">Dimensions &amp; Efforts</div>
+      <div class="fr3">
+        <div class="field"><label>a (cm)<span class="tip">?<div class="tt">Dimension dans le sens longitudinal du pont</div></span></label><input type="number" id="ae_a" value="30" oninput="chk(this,1)"></div>
+        <div class="field"><label>b (cm)<span class="tip">?<div class="tt">Dimension dans le sens transversal</div></span></label><input type="number" id="ae_b" value="20" oninput="chk(this,1)"></div>
+        <div class="field"><label>T caouch. (cm)<span class="tip">?<div class="tt">Épaisseur totale du caoutchouc (sans acier)</div></span></label><input type="number" id="ae_T" value="5" oninput="chk(this,.5)"></div>
+      </div>
+      <div class="fr3">
+        <div class="field"><label>Nbre couches n</label><input type="number" id="ae_n" value="4" min="1"></div>
+        <div class="field"><label>G (MPa)</label><input type="number" id="ae_G" value="1.2" step=".1"></div>
+      </div>
+      <div class="div"></div>
+      <div class="fr">
+        <div class="field"><label>Nmax (MN)</label><input type="number" id="ae_Nmax" value="24.576" step=".001"></div>
+        <div class="field"><label>Nmin (MN)</label><input type="number" id="ae_Nmin" value="17.49" step=".001"></div>
+      </div>
+      <div class="fr">
+        <div class="field"><label>Hs séisme (MN)</label><input type="number" id="ae_Hs" value="0.3983" step=".0001"></div>
+        <div class="field"><label>ε déplacement (cm)</label><input type="number" id="ae_eps" value="0.8758" step=".001"></div>
+      </div>
+      <div class="fr">
+        <div class="field"><label>Hbc freinage (MN)</label><input type="number" id="ae_Hbc" value="0.030" step=".001"></div>
+        <div class="field"><label>Hal freinage (MN)</label><input type="number" id="ae_Hal" value="0.00963" step=".0001"></div>
+      </div>
+      <div class="fr">
+        <div class="field"><label>Hve vent (MN)</label><input type="number" id="ae_Hve" value="0.0048" step=".0001"></div>
+        <div class="field"><label>U dépl. horiz (cm)</label><input type="number" id="ae_U" value="0.9737" step=".001"></div>
+      </div>
+      <div class="brow"><button class="btn bp" onclick="doApp()">⚡ <span data-t="btn-verify">VÉRIFIER</span></button><button class="btn bo" onclick="showHelp('app')">❓</button></div>
+    </div>
+    <div class="card">
+      <div class="ctitle cg" data-t="app-res">Résultats des 9 vérifications</div>
+      <div id="appRes"><div class="alert ai" data-t="wait">⟳ Lancez la vérification.</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════ EFFORTS H ════════════════════ -->
+<div class="panel" id="p-effh">
+  <div class="ptitle" data-t="eh-title">EFFORTS HORIZONTAUX</div>
+  <div class="psub" data-t="eh-sub">Freinage, vent, séisme, déformation — RPOA Art. 1.8.2</div>
+  <div class="g2">
+    <div class="card">
+      <div class="ctitle ca">Données</div>
+      <div class="fr">
+        <div class="field"><label>Hbc Bc (MN)</label><input type="number" id="eh_Hbc" value="0.030" step=".001"></div>
+        <div class="field"><label>Hal A(L) (MN)</label><input type="number" id="eh_Hal" value="0.00963" step=".0001"></div>
+      </div>
+      <div class="fr">
+        <div class="field"><label>p vent (KN/m²)</label><input type="number" id="eh_p" value="0.25" step=".01"></div>
+        <div class="field"><label>Surface S (m²)</label><input type="number" id="eh_S" value="31" step=".5"></div>
+      </div>
+      <div class="fr">
+        <div class="field"><label>Fh séisme (MN)</label><input type="number" id="eh_Fh" value="2.8018" step=".001"></div>
+        <div class="field"><label>Nbre appuis</label><input type="number" id="eh_na" value="8" min="1"></div>
+      </div>
+      <div class="fr">
+        <div class="field"><label>G (MPa)</label><input type="number" id="eh_G" value="1.2" step=".1"></div>
+        <div class="field"><label>T caouch. (cm)</label><input type="number" id="eh_T" value="5"></div>
+      </div>
+      <div class="fr">
+        <div class="field"><label>a (cm)</label><input type="number" id="eh_a" value="30"></div>
+        <div class="field"><label>b (cm)</label><input type="number" id="eh_b" value="20"></div>
+      </div>
+      <div class="fr"><div class="field"><label>ε (cm)</label><input type="number" id="eh_eps" value="0.8758" step=".001"></div></div>
+      <div class="brow"><button class="btn bp" onclick="doEffh()">⚡ <span data-t="btn-calc">CALCULER</span></button></div>
+    </div>
+    <div class="card">
+      <div class="ctitle cg">Résultats</div>
+      <div id="effhRes"><div class="alert ai" data-t="wait">⟳ Calculez.</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════ RÉCAPITULATIF ════════════════ -->
+<div class="panel" id="p-sum">
+  <div class="ptitle" data-t="sum-title">RÉCAPITULATIF FINAL</div>
+  <div class="psub" data-t="sum-sub">Synthèse complète de tous les résultats — Prêt pour rapport</div>
+  <div id="sumContent"><div class="alert ai" data-t="sum-wait">⟳ Complétez les calculs pour générer le récapitulatif automatique.</div></div>
+</div>
+
+<!-- ═══════════ CRITÈRES DE RÉGULARITÉ §1.7.1.1 ════════ -->
+<div class="panel" id="p-crit">
+  <div class="ptitle">CRITÈRES DE RÉGULARITÉ</div>
+  <div class="psub">Domaine d'application méthode monomodale — RPOA §1.7.1.1</div>
+  <div class="g2">
+    <div class="card">
+      <div class="ctitle ca">Paramètres géométriques</div>
+      <div class="fr">
+        <div class="field"><label>Masse modale / M_tot (%)<span class="tip">?<div class="tt">Cond.1 : masse modale &gt; 70% masse totale</div></span></label>
+          <input type="number" id="cr_mmf" value="85" min="0" max="100" step="1"></div>
+        <div class="field"><label>Angle de biais (grades)<span class="tip">?<div class="tt">Cond.2 : biais &gt; 70g (pont quasi-perpendiculaire)</div></span></label>
+          <input type="number" id="cr_biais" value="90" min="0" max="100" step="1"></div>
+      </div>
+      <div class="fr">
+        <div class="field"><label>Courbure en plan (grades)<span class="tip">?<div class="tt">Cond.3 : courbure &lt; 30 grades</div></span></label>
+          <input type="number" id="cr_curv" value="0" min="0" max="100" step="1"></div>
+        <div class="field"><label>Excentricité e₀/L (%)<span class="tip">?<div class="tt">Cond.4 : e₀ ≤ 5% de la distance entre appuis extrêmes</div></span></label>
+          <input type="number" id="cr_exc" value="2" min="0" max="100" step="0.5"></div>
+      </div>
+      <div class="fr">
+        <div class="field"><label>Variation K longitudinal (%)</label>
+          <input type="number" id="cr_dKL" value="5" min="0" max="100"></div>
+        <div class="field"><label>Variation K transversal (%)</label>
+          <input type="number" id="cr_dKT" value="5" min="0" max="100"></div>
+      </div>
+      <div class="brow"><button class="btn bp" onclick="doCrit()">✅ VÉRIFIER RÉGULARITÉ</button></div>
+    </div>
+    <div class="card">
+      <div class="ctitle cb">Résultats</div>
+      <div id="critRes"><div class="alert ai">⟳ Renseignez les données et cliquez Vérifier.</div></div>
+    </div>
+  </div>
+  <div class="card" style="margin-top:14px">
+    <div class="ctitle cg">4 Conditions RPOA §1.7.1.1</div>
+    <table class="dt"><thead><tr><th>#</th><th>Critère</th><th>Limite</th><th>Si non vérifié</th></tr></thead><tbody>
+      <tr><td>1</td><td>Masse modale fondamentale</td><td class="mono">&gt; 70% M_tot</td><td>Analyse modale complète nécessaire</td></tr>
+      <tr><td>2</td><td>Angle de biais</td><td class="mono">&gt; 70 grades</td><td>Correction raideurs ±10%</td></tr>
+      <tr><td>3</td><td>Courbure en plan</td><td class="mono">&lt; 30 grades</td><td>Modèle 3D complet</td></tr>
+      <tr><td>4</td><td>Excentricité e₀ (séisme transversal)</td><td class="mono">≤ 5% L</td><td>Reconsidérer séisme transversal</td></tr>
+    </tbody></table>
+  </div>
+</div>
+
+<!-- ══════════════ ANALYSE MULTIMODALE ═══════════════════ -->
+<div class="panel" id="p-multi">
+  <div class="ptitle">ANALYSE MULTIMODALE — RAYLEIGH</div>
+  <div class="psub">Méthode spectrale avancée — RPOA §1.7.1.2b — Tablier flexible</div>
+  <div class="alert aw" style="margin-bottom:14px">⚠️ Utiliser cette méthode quand la méthode monomodale n'est pas applicable (masse modale &lt; 70%, pont courbe/biaisé, tablier flexible).</div>
+  <div class="g2">
+    <div class="card">
+      <div class="ctitle ca">Structure multi-masses</div>
+      <div class="fr">
+        <div class="field"><label>Nombre de nœuds<span class="tip">?<div class="tt">Nombre de masses concentrées (3 à 7 pour tablier flexible typique)</div></span></label>
+          <input type="number" id="mm_nn" value="5" min="2" max="12" step="1" oninput="buildMassTable()"></div>
+        <div class="field"><label>Zone sismique</label>
+          <select id="mm_zn"><option value="I">Zone I</option><option value="IIa" selected>Zone IIa</option><option value="IIb">Zone IIb</option><option value="III">Zone III</option></select></div>
+      </div>
+      <div class="fr">
+        <div class="field"><label>Classe du pont</label>
+          <select id="mm_cl"><option value="1">G1</option><option value="2">G2</option><option value="3" selected>G3</option></select></div>
+        <div class="field"><label>Site</label>
+          <select id="mm_si"><option value="S1">S1</option><option value="S2" selected>S2</option><option value="S3">S3</option><option value="S4">S4</option></select></div>
+      </div>
+      <div class="fr">
+        <div class="field"><label>Amortissement ξ (%)</label>
+          <input type="number" id="mm_xi" value="5" min="1" max="20" step="0.5"></div>
+        <div class="field"><label>Type de spectre</label>
+          <select id="mm_sp"><option value="H">Saᵉʰ — Horizontal</option><option value="V">Saᵉᵛ — Vertical</option><option value="D">Saᵈ — Dimensionnement</option></select></div>
+      </div>
+      <div class="ctitle cg" style="margin-top:10px">Masses et déplacements (statique sous g)</div>
+      <div id="massTableWrap">
+        <table class="dt"><thead><tr><th>Nœud i</th><th>Masse mᵢ (t)</th><th>Dépl. Uᵢ (m)</th></tr></thead>
+        <tbody id="massTableBody"></tbody></table>
+      </div>
+      <div class="alert ai" style="margin-top:6px;font-size:10px">💡 Uᵢ = déplacement sous chargement statique unitaire g dans la direction étudiée (issu de votre modèle EF ou du module voussoirs).</div>
+      <div class="brow" style="margin-top:10px"><button class="btn bp" onclick="doMulti()">🌊 CALCULER RAYLEIGH</button></div>
+    </div>
+    <div class="card">
+      <div class="ctitle cb">Résultats Rayleigh</div>
+      <div id="multiRes"><div class="alert ai">⟳ Complétez le tableau de masses/déplacements puis cliquez Calculer.</div></div>
+    </div>
+  </div>
+  <div class="card" style="margin-top:14px">
+    <div class="ctitle cg">Formules — RPOA §1.7.1.2b</div>
+    <div class="fbox">Période fondamentale (Rayleigh) :
+  T = 2π · √( Σᵢ(mᵢ · Uᵢ²) / Σᵢ(mᵢ · Uᵢ) )
+
+Force sismique au nœud i :
+  Fᵢ = (2π/T)² · (Sa(T)/g) · Uᵢ · mᵢ
+
+Force totale :
+  F_tot = Σᵢ Fᵢ
+
+Combinaison SRSS (modes décorrélés) :
+  R = √( Σₖ Rₖ² )
+
+Note : pour analyse multimodale complète, utiliser logiciel EF dédié (SAP2000, Robot, etc.)</div>
+  </div>
+</div>
+
+<!-- ═══════════════════════ TABLES RPOA ══════════════════ -->
+<div class="panel" id="p-ref">
+  <div class="ptitle" data-t="ref-title">TABLEAUX DE RÉFÉRENCE RPOA</div>
+  <div class="psub" data-t="ref-sub">Données normatives extraites du règlement RPOA 2008</div>
+  <div class="g2">
+    <div class="card"><div class="ctitle" data-t="ref-A">Coefficient A — Art. 1.4.3</div>
+      <table class="dt"><thead><tr><th data-t="t-grp">Groupe</th><th>Zone I</th><th>Zone IIa</th><th>Zone IIb</th><th>Zone III</th></tr></thead><tbody>
+        <tr><td data-t="g1l">G1 Stratégique</td><td class="mono">0.15</td><td class="mono">0.25</td><td class="mono">0.30</td><td class="mono">0.40</td></tr>
+        <tr><td data-t="g2l">G2 Important</td><td class="mono">0.12</td><td class="mono">0.20</td><td class="mono">0.25</td><td class="mono">0.30</td></tr>
+        <tr><td data-t="g3l">G3 Moyen</td><td class="mono">0.10</td><td class="mono">0.15</td><td class="mono">0.20</td><td class="mono">0.25</td></tr>
+      </tbody></table>
+    </div>
+    <div class="card"><div class="ctitle" data-t="ref-Sh">Site Horizontal</div>
+      <table class="dt"><thead><tr><th>Site</th><th>T1 (s)</th><th>T2 (s)</th><th>S</th><th data-t="t-desc">Description</th></tr></thead><tbody>
+        <tr><td>S1</td><td class="mono">0.15</td><td class="mono">0.30</td><td class="mono">1.0</td><td data-t="s1d">Rocheux Vs≥800</td></tr>
+        <tr><td>S2</td><td class="mono">0.15</td><td class="mono">0.40</td><td class="mono">1.1</td><td data-t="s2d">Ferme Vs≥400</td></tr>
+        <tr><td>S3</td><td class="mono">0.20</td><td class="mono">0.50</td><td class="mono">1.3</td><td data-t="s3d">Meuble Vs≥200</td></tr>
+        <tr><td>S4</td><td class="mono">0.20</td><td class="mono">0.70</td><td class="mono">1.3</td><td data-t="s4d">Très meuble</td></tr>
+      </tbody></table>
+    </div>
+    <div class="card"><div class="ctitle" data-t="ref-xi">Amortissement</div>
+      <table class="dt"><thead><tr><th data-t="t-mat">Matériau</th><th>ξ (%)</th><th>η</th></tr></thead><tbody>
+        <tr><td data-t="m-as">Acier soudé</td><td class="mono">2</td><td class="mono g" id="eta-2"></td></tr>
+        <tr><td data-t="m-ab">Acier boulonné</td><td class="mono">4</td><td class="mono g" id="eta-4"></td></tr>
+        <tr><td data-t="m-bp">Béton précontraint</td><td class="mono">2</td><td class="mono g" id="eta-2b"></td></tr>
+        <tr><td data-t="m-ba">Béton armé</td><td class="mono">5</td><td class="mono g" id="eta-5"></td></tr>
+        <tr><td data-t="m-el">Élastomère fretté</td><td class="mono">7</td><td class="mono g" id="eta-7"></td></tr>
+      </tbody></table>
+    </div>
+    <div class="card s2"><div class="ctitle" data-t="ref-form">Formules clés RPOA</div>
+      <div class="fbox">T = 2π√(M/K)    |    D = (T/2π)²·Sae(T)    |    Fᵢ = (Kᵢ/K)·F
+η = √(7/(2+ξ))    |    α = 0.7 (Zones I,IIa,IIb)    |    α = 1.0 (Zone III)
+
+Sae(T):  0&lt;T&lt;T1 → Ag·S·(1+T/T1·(2.5η-1))  |  T1&lt;T&lt;T2 → 2.5ηAgS
+         T2&lt;T&lt;3s → 2.5ηAgS·(T2/T)           |  T&gt;3s → 2.5ηAgS·(3T2/T²)
+
+Rayleigh: T = 2π√(Σmᵢuᵢ²/Σmᵢuᵢ·g)    Fᵢ = (2π/T)²·Sa/g·uᵢ·mᵢ
+Vertical: Fᵢᵛ = (2π/T)²·Saeᵛ/g·vᵢ·mᵢ
+
+Appareil: β = ab/[2t_el(a+b)]    τN = 1.5Nmax/(Aβ) &lt; 3G
+          f = 0.12+0.6/σmin       H &lt; f·Nmin  (non-glissement)
+          τH = τH1+0.5τH2 &lt; 1.3G (séisme) ou &lt; 0.7G (freinage)</div>
+    </div>
+  </div>
+</div>
+
+</main>
+</div>
+
+<script>
+// ════════════════════════════════════════════════════
+// CONSTANTS & STATE
+// ════════════════════════════════════════════════════
+const G_=9.81;
+const A_TAB={'0':{1:0,2:0,3:0},'I':{1:.15,2:.12,3:.10},'IIa':{1:.25,2:.20,3:.15},'IIb':{1:.30,2:.25,3:.20},'III':{1:.40,2:.30,3:.25}};
+const SH_={S1:{T1:.15,T2:.30,S:1.0},S2:{T1:.15,T2:.40,S:1.1},S3:{T1:.20,T2:.50,S:1.3},S4:{T1:.20,T2:.70,S:1.3}};
+const SV_={S1:{T1:.15,T2:.30},S2:{T1:.15,T2:.40},S3:{T1:.20,T2:.40},S4:{T1:.20,T2:.40}};
+
+let SP={},POU={},VOU={},APP={};
+let isDark=true,lang='fr';
+
+// Template helper
+function eta2(xi){return Math.sqrt(7/(2+xi)).toFixed(4);}
+// Fill eta values in reference table
+['2','4','2b','5','7'].forEach((k,i)=>{
+  const xi=[2,4,2,5,7][i];
+  const el=document.getElementById('eta-'+k);
+  if(el)el.textContent=eta2(xi);
+});
+
+// ════════════════════════════════════════════════════
+// TRANSLATIONS
+// ════════════════════════════════════════════════════
+const T_={
+  fr:{'htitle':'CALCUL SISMIQUE — APPUIS DE PONT','h-save':'Sauvegarder','h-open':'Ouvrir','h-pdf':'Rapport PDF',
+      'n0':'Accueil','n1':'Spectres & Analyse','n2':'Pont à Poutres BP','n3':'Pont à Voussoirs BP','n4':'Vérifications','n5':'Référence',
+      'n-dash':'Tableau de bord','n-spec':'Spectre de réponse','n-sens':'Sensibilité','n-sce':'Multi-scénarios',
+      'n-pou':'Données & Raideurs','n-pou2':'Forces sismiques','n-sch':'Schéma 3D',
+      'n-vou':'Données & Raideurs','n-vlong':'Séisme longitudinal','n-vtrans':'Séisme transversal','n-vvert':'Séisme vertical',
+      'n-app':'Appareils d\'appui','n-effh':'Efforts horizontaux','n-sum':'Récapitulatif','n-ref':'Tableaux RPOA',
+      'd-title':'TABLEAU DE BORD','d-sub':'Vue d\'ensemble — Statut des modules et résultats clés',
+      'kT':'Période fond.','kF':'Force sismique','kD':'Déplacement','kApp':'Appareils d\'appui',
+      'd-status':'Statut des modules','d-info':'Informations du projet',
+      'st-spec':'Spectre de réponse','st-pou':'Pont à poutres','st-vou':'Pont à voussoirs','st-app':'Appareils d\'appui','st-sce':'Multi-scénarios',
+      'fi-nom':'Nom du projet','fi-ing':'Ingénieur','fi-date':'Date','fi-ref':'Référence',
+      'd-tip':'Remplissez les informations — elles apparaissent dans le rapport PDF.',
+      'd-cite':'Outil RPOA 2008 — Mémoire K. Amira, Univ. Jijel (2022/2023)',
+      'sp-title':'SPECTRE DE RÉPONSE','sp-sub':'Composantes horiz., vert. et dimensionnement — RPOA Art. 1.5',
+      'sp-params':'Paramètres sismiques','sp-res':'Paramètres calculés',
+      'sp-cl':'Classe du pont','sp-zone':'Zone sismique','sp-site':'Catégorie de site','sp-xi':'Amortissement ξ (%)','sp-Tq':'Période T (s)','sp-q':'Coeff. q',
+      'rSaeh':'Saᵉʰ(T) — horizontal','rSaev':'Saᵉᵛ(T) — vertical','rSaed':'Saᵈ(T) — dimensionnement',
+      'tab-H':'Horizontal','tab-V':'Vertical','tab-D':'Dimensionnement','tab-all':'Comparaison 4 zones',
+      'se-title':'ANALYSE DE SENSIBILITÉ','se-sub':'Variation de Saᵉʰ selon zone, site, amortissement',
+      'se-cl':'Classe','se-T':'Période T (s)','se-xi':'ξ (%)','se-tip':'Interprétation',
+      'sc-title':'COMPARAISON MULTI-SCÉNARIOS','sc-sub':'Comparez deux configurations côte à côte',
+      'sc-cl':'Classe','sc-zone':'Zone','sc-M':'Masse M (t)','sc-K':'Raideur K (KN/m)',
+      'pou-title':'PONT À POUTRES — DONNÉES','pou-sub':'Masse, raideur piles, appareils',
+      'pou-geo':'Géométrie','pou-Gt':'G_tab (t)','pou-nt':'Nbre travées','pou-L':'L (m)','pou-B':'B (m)',
+      'pou-Gp':'Poids piles (t)','pou-np':'Nbre piles','pou-fut':'Fûts circulaires',
+      'pou-nf':'Nbre fûts','pou-Eb':'Eb (KN/m²)','pou-enc':'Encastrement','pou-app':'Appareils d\'appui',
+      'pou-nap':'Nbre app/pile','pou-nac':'Nbre app/culée','pou-G':'G (KN/m³)',
+      'pou2-title':'PONT À POUTRES — RÉSULTATS','pou2-sub':'Forces sismiques longitudinale et transversale',
+      'sch-title':'SCHÉMA 3D DU PONT','sch-sub':'Visualisation interactive — Cliquez et faites glisser pour tourner',
+      'sch-pou':'Pont à poutres','sch-vou':'Pont à voussoirs','sch-mod':'Modèle dynamique',
+      'sch-drag':'🖱️ Cliquez et faites glisser pour tourner — Molette pour zoomer',
+      'vou-title':'PONT À VOUSSOIRS — DONNÉES','vou-sub':'Raideur voile, appareils, condition monomodale',
+      'vou-gen':'Données générales','vou-Mt':'Mt tablier (t)','vou-Mp':'Mp piles (t)','vou-nt':'Nbre travées','vou-pile':'Pile en voile','vou-na':'Nbre app/appui','vou-app':'Appareils',
+      'vl-title':'SÉISME LONGITUDINAL','vl-sub':'Tablier rigide — Méthode monomodale',
+      'vt-title':'SÉISME TRANSVERSAL','vt-sub':'Méthode de Rayleigh — Gauss-Jordan',
+      'vt-nn':'Nbre nœuds','vt-mi':'mi (t)','vt-m1':'m1 central (t)',
+      'vv-title':'SÉISME VERTICAL','vv-sub':'Composante verticale ascendante — Flexion tablier','vv-nn':'Nbre nœuds',
+      'app-title':'APPAREILS D\'APPUI — VÉRIFICATION','app-sub':'9 conditions RPOA Art. 1.8.3',
+      'app-dim':'Dimensions & Efforts','app-res':'Résultats des 9 vérifications',
+      'eh-title':'EFFORTS HORIZONTAUX','eh-sub':'Freinage, vent, séisme, déformation',
+      'sum-title':'RÉCAPITULATIF FINAL','sum-sub':'Synthèse complète de tous les résultats',
+      'sum-wait':'⟳ Complétez les calculs pour générer le récapitulatif.',
+      'ref-title':'TABLEAUX DE RÉFÉRENCE RPOA','ref-sub':'Données normatives RPOA 2008',
+      'ref-A':'Coefficient A','ref-Sh':'Site Horizontal','ref-xi':'Amortissement','ref-form':'Formules clés',
+      't-grp':'Groupe','t-mat':'Matériau','t-desc':'Description',
+      'g1l':'G1 Stratégique','g2l':'G2 Important','g3l':'G3 Moyen',
+      's1d':'Rocheux Vs≥800','s2d':'Ferme Vs≥400','s3d':'Meuble Vs≥200','s4d':'Très meuble',
+      'g1o':'Groupe 1 — Stratégique','g2o':'Groupe 2 — Important','g3o':'Groupe 3 — Moyen',
+      'btn-calc':'CALCULER','btn-res':'→ Résultats','btn-verify':'VÉRIFIER','btn-analyze':'ANALYSER',
+      'btn-compare':'COMPARER','btn-help':'❓ Aide','btn-long':'→ Longitudinal',
+      'wait':'⟳ En attente...'},
+  en:{'htitle':'SEISMIC ANALYSIS — BRIDGE SUPPORTS','h-save':'Save','h-open':'Open','h-pdf':'PDF Report',
+      'n0':'Home','n1':'Spectra & Analysis','n2':'Beam Bridge BP','n3':'Segmental Bridge BP','n4':'Verifications','n5':'Reference',
+      'n-dash':'Dashboard','n-spec':'Response Spectrum','n-sens':'Sensitivity','n-sce':'Multi-scenario',
+      'n-pou':'Data & Stiffness','n-pou2':'Seismic Forces','n-sch':'3D Schema',
+      'n-vou':'Data & Stiffness','n-vlong':'Longitudinal Seism','n-vtrans':'Transverse Seism','n-vvert':'Vertical Seism',
+      'n-app':'Elastomeric Bearings','n-effh':'Horizontal Forces','n-sum':'Summary','n-ref':'RPOA Tables',
+      'd-title':'DASHBOARD','d-sub':'Overview — Module status and key results',
+      'kT':'Fund. Period','kF':'Seismic Force','kD':'Displacement','kApp':'Bearings',
+      'd-status':'Module Status','d-info':'Project Information',
+      'st-spec':'Response spectrum','st-pou':'Beam bridge','st-vou':'Segmental bridge','st-app':'Bearings','st-sce':'Multi-scenario',
+      'fi-nom':'Project name','fi-ing':'Engineer','fi-date':'Date','fi-ref':'Reference',
+      'd-tip':'Fill project info — it appears in the PDF report.',
+      'd-cite':'RPOA 2008 tool — K. Amira thesis, Univ. Jijel (2022/2023)',
+      'sp-title':'RESPONSE SPECTRUM','sp-sub':'Horizontal, vertical and design spectrum — RPOA Art. 1.5',
+      'sp-params':'Seismic parameters','sp-res':'Computed parameters',
+      'sp-cl':'Bridge class','sp-zone':'Seismic zone','sp-site':'Site category','sp-xi':'Damping ξ (%)','sp-Tq':'Period T (s)','sp-q':'Behavior coeff. q',
+      'rSaeh':'Saᵉʰ(T) — horizontal','rSaev':'Saᵉᵛ(T) — vertical','rSaed':'Saᵈ(T) — design',
+      'tab-H':'Horizontal','tab-V':'Vertical','tab-D':'Design','tab-all':'4 Zones Comparison',
+      'se-title':'SENSITIVITY ANALYSIS','se-sub':'Saᵉʰ variation by zone, site, damping',
+      'se-cl':'Class','se-T':'Period T (s)','se-xi':'ξ (%)','se-tip':'Interpretation',
+      'sc-title':'MULTI-SCENARIO COMPARISON','sc-sub':'Compare two configurations side by side',
+      'sc-cl':'Class','sc-zone':'Zone','sc-M':'Mass M (t)','sc-K':'Stiffness K (KN/m)',
+      'pou-title':'BEAM BRIDGE — DATA','pou-sub':'Mass, pier stiffness, bearings',
+      'pou-geo':'Geometry','pou-Gt':'G_tab (t)','pou-nt':'No. spans','pou-L':'L (m)','pou-B':'B (m)',
+      'pou-Gp':'Pier weight (t)','pou-np':'No. piers','pou-fut':'Circular shafts',
+      'pou-nf':'No. shafts','pou-Eb':'Eb (KN/m²)','pou-enc':'Support condition','pou-app':'Bearings',
+      'pou-nap':'No. bear/pier','pou-nac':'No. bear/abutment','pou-G':'G (KN/m³)',
+      'pou2-title':'BEAM BRIDGE — RESULTS','pou2-sub':'Longitudinal and transverse seismic forces',
+      'sch-title':'3D BRIDGE DIAGRAM','sch-sub':'Interactive — click and drag to rotate',
+      'sch-pou':'Beam bridge','sch-vou':'Segmental bridge','sch-mod':'Dynamic model',
+      'sch-drag':'🖱️ Click and drag to rotate — Scroll to zoom',
+      'vou-title':'SEGMENTAL BRIDGE — DATA','vou-sub':'Wall pier stiffness, bearings, monomodal condition',
+      'vou-gen':'General data','vou-Mt':'Mt deck (t)','vou-Mp':'Mp piers (t)','vou-nt':'No. spans','vou-pile':'Wall pier','vou-na':'No. bear/support','vou-app':'Bearings',
+      'vl-title':'LONGITUDINAL SEISM','vl-sub':'Rigid deck — Monomodal method',
+      'vt-title':'TRANSVERSE SEISM','vt-sub':'Rayleigh method — Gauss-Jordan',
+      'vt-nn':'No. nodes','vt-mi':'mi (t)','vt-m1':'Central m1 (t)',
+      'vv-title':'VERTICAL SEISM','vv-sub':'Upward vertical component — Deck bending','vv-nn':'No. nodes',
+      'app-title':'ELASTOMERIC BEARINGS — VERIFICATION','app-sub':'9 conditions RPOA Art. 1.8.3',
+      'app-dim':'Dimensions & Forces','app-res':'9 verification results',
+      'eh-title':'HORIZONTAL FORCES','eh-sub':'Braking, wind, seismic, deformation',
+      'sum-title':'FINAL SUMMARY','sum-sub':'Complete synthesis of all results',
+      'sum-wait':'⟳ Complete calculations to generate summary.',
+      'ref-title':'RPOA REFERENCE TABLES','ref-sub':'RPOA 2008 normative data',
+      'ref-A':'Coefficient A','ref-Sh':'Horizontal Site','ref-xi':'Damping','ref-form':'Key Formulas',
+      't-grp':'Group','t-mat':'Material','t-desc':'Description',
+      'g1l':'G1 Strategic','g2l':'G2 Important','g3l':'G3 Average',
+      's1d':'Rocky Vs≥800','s2d':'Firm Vs≥400','s3d':'Soft Vs≥200','s4d':'Very soft',
+      'g1o':'Group 1 — Strategic','g2o':'Group 2 — Important','g3o':'Group 3 — Average',
+      'btn-calc':'CALCULATE','btn-res':'→ Results','btn-verify':'VERIFY','btn-analyze':'ANALYZE',
+      'btn-compare':'COMPARE','btn-help':'❓ Help','btn-long':'→ Longitudinal',
+      'wait':'⟳ Waiting...'}
+};
+
+function setLang(l){
+  lang=l;
+  document.getElementById('bFR').classList.toggle('on',l==='fr');
+  document.getElementById('bEN').classList.toggle('on',l==='en');
+  const d=T_[l];
+  document.querySelectorAll('[data-t]').forEach(el=>{
+    const k=el.getAttribute('data-t');
+    if(d[k]!==undefined) el.textContent=d[k];
+  });
+  toast(l==='fr'?'Langue: Français 🇫🇷':'Language: English 🇬🇧','ok');
+}
+
+// ════════════════════════════════════════════════════
+// THEME
+// ════════════════════════════════════════════════════
+function toggleTheme(){
+  isDark=!isDark;
+  document.documentElement.setAttribute('data-theme',isDark?'dark':'light');
+  document.getElementById('themeBtn').textContent=isDark?'🌙':'☀️';
+  setTimeout(redrawAll,80);
+}
+
+// ════════════════════════════════════════════════════
+// NAVIGATION
+// ════════════════════════════════════════════════════
+function go(id){
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('on'));
+  document.querySelectorAll('.nb').forEach(b=>b.classList.remove('on'));
+  const p=document.getElementById('p-'+id);
+  if(p)p.classList.add('on');
+  const b=document.querySelector(`.nb[data-p="${id}"]`);
+  if(b)b.classList.add('on');
+  if(id==='sch')setTimeout(initAll3D,100);
+}
+function stab(btn,id){
+  const par=document.getElementById(id).closest('.panel');
+  par.querySelectorAll('.tp').forEach(t=>t.classList.remove('on'));
+  par.querySelectorAll('.tb').forEach(b=>b.classList.remove('on'));
+  document.getElementById(id).classList.add('on');
+  btn.classList.add('on');
+  if(id.startsWith('s3'))setTimeout(initAll3D,80);
+}
+function setStat(id,type,txt){
+  const el=document.getElementById('st-'+id);
+  if(el)el.innerHTML=`<span class="badge ${type}">${txt}</span>`;
+  const ns=document.getElementById('ns-'+id);
+  if(ns){
+    ns.className='nstat';
+    if(type==='bok')ns.classList.add('done');
+    else if(type==='bnok'||type==='bwarn')ns.classList.add('warn');
+  }
+}
+
+// ════════════════════════════════════════════════════
+// VALIDATION
+// ════════════════════════════════════════════════════
+function chk(inp,min=0,max=Infinity){
+  const val=parseFloat(inp.value);
+  const bad=isNaN(val)||val<min||val>max;
+  inp.classList.toggle('err',bad);
+  inp.classList.toggle('good',!bad);
+  // Supprimer/ajouter message d'erreur inline
+  let msg=inp.parentElement.querySelector('.errmsg');
+  if(bad){
+    if(!msg){msg=document.createElement('div');msg.className='errmsg';inp.after(msg);}
+    msg.textContent=isNaN(val)?'Valeur requise':`Entre ${min} et ${max===Infinity?'∞':max}`;
+  }else if(msg){msg.remove();}
+}
+
+// ════════════════════════════════════════════════════
+// HELP MODAL
+// ════════════════════════════════════════════════════
+const HELP={
+  spec:{fr:`<p><strong>Spectre de réponse élastique</strong> — RPOA Art. 1.5.1</p>
+    <div class="fbox">0&lt;T&lt;T1: Sae = A·g·S·(1 + T/T1·(2.5η-1))
+T1≤T≤T2: Sae = 2.5·η·A·g·S
+T2&lt;T≤3s: Sae = 2.5·η·A·g·S·(T2/T)
+T&gt;3s:    Sae = 2.5·η·A·g·S·(3T2/T²)
+
+η = √(7/(2+ξ))  — facteur d'amortissement
+α = 0.7 (Zones I,IIa,IIb)  |  α = 1.0 (Zone III)</div>
+    <p>Le spectre vertical utilise α au lieu de S, et des T2 réduits.</p>`,
+   en:`<p><strong>Elastic response spectrum</strong> — RPOA Art. 1.5.1</p>
+    <div class="fbox">0&lt;T&lt;T1: Sae = A·g·S·(1 + T/T1·(2.5η-1))
+T1≤T≤T2: Sae = 2.5·η·A·g·S
+T2&lt;T≤3s: Sae = 2.5·η·A·g·S·(T2/T)
+T&gt;3s:    Sae = 2.5·η·A·g·S·(3T2/T²)</div>`},
+  pou:{fr:`<p><strong>Pont à poutres BP — Calcul sismique</strong></p>
+    <div class="fbox">I_fût = π·D⁴/64  (section circulaire)
+K_pile = n_fûts × (3 ou 12)·E·I/h³
+K_app  = n_app × G × a × b / e
+
+Série: K_tot = 1/(1/K_app + 1/K_pile)
+K_sys = 2·K_culée + n_piles·K_tot_pile
+
+T = 2π√(M/K_sys)  |  F = M·Sae(T)
+Fᵢ = (Kᵢ/K_sys)·F</div>
+    <p>Vérification tablier rigide: L/B ≥ 5</p>`,
+   en:`<p><strong>Beam bridge — Seismic calculation</strong></p>
+    <div class="fbox">I = π·D⁴/64  |  K_pier = n·(3or12)·EI/h³
+K_sys = 2·K_abutment + n·K_pier_total
+T = 2π√(M/K)  |  F = M·Sae(T)</div>`},
+  app:{fr:`<p><strong>Appareils d'appui en élastomère fretté</strong> — RPOA Art. 1.8.3</p>
+    <div class="fbox">β = a·b / [2·t_el·(a+b)]  — facteur de forme
+τN = 1.5·Nmax/(A·β)    &lt; 3G   ✓compression
+σmin = Nmin/A           ≥ 2 MPa
+τH1 = G·U/T            déplacement
+τH2 = H/(a·b)          cisaillement horiz.
+τH  = τH1 + 0.5·τH2   &lt; 1.3G (séisme)
+                        &lt; 0.7G (freinage/vent)
+f = 0.12 + 0.6/σmin   anti-glissement
+H &lt; f·Nmin            vérif. non-glissement
+ε &lt; 0.7·T             déformation limite
+γ_tot ≤ 2.5            distorsion totale</div>`,
+   en:`<p><strong>Elastomeric bearings verification</strong> — RPOA Art. 1.8.3</p>
+    <div class="fbox">β = ab/[2t_el(a+b)] | τN = 1.5Nmax/(Aβ) &lt; 3G
+τH = τH1+0.5τH2 &lt; 1.3G (seismic) | &lt; 0.7G (braking)</div>`}
+};
+function showHelp(key){
+  document.getElementById('helpTitle').textContent=lang==='fr'?'AIDE — '+key.toUpperCase():'HELP — '+key.toUpperCase();
+  document.getElementById('helpBody').innerHTML=(HELP[key]||{})[lang]||'No help.';
+  document.getElementById('helpModal').classList.add('on');
+}
+function closeHelp(){document.getElementById('helpModal').classList.remove('on');}
+
+// ════════════════════════════════════════════════════
+// RPOA FUNCTIONS
+// ════════════════════════════════════════════════════
+function getA(z,c){return(A_TAB[z]||{})[+c]||0;}
+function eta(xi){return Math.sqrt(7/(2+parseFloat(xi)));}
+function alpha(z){return z==='III'?1.0:0.7;}
+
+// ── SPECTRES RPOA Art.1.5 ──────────────────────────────────────────
+// Sae horizontale (RPOA Ch.1 Tableau 1.3 + formules p.7-8)
+// 0 < T < T1  : Sae = A·g·S·(1 + T/T1·(2.5η − 1))
+// T1 ≤ T ≤ T2 : Sae = 2.5·η·A·g·S
+// T2 < T ≤ 3s : Sae = 2.5·η·A·g·S·(T2/T)
+// T > 3s      : Sae = 2.5·η·A·g·S·(3·T2/T²)
+function Sah(T,A,n,S,T1,T2){
+  if(T<=0)return 0;
+  const base=2.5*n*A*G_*S;
+  if(T<T1) return A*G_*S*(1+(T/T1)*(2.5*n-1));
+  if(T<=T2)return base;
+  if(T<=3) return base*(T2/T);
+  return base*(3*T2/(T*T));
+}
+
+// Sae verticale (RPOA Ch.1 p.8 — α remplace S, Tableau 1.4)
+// α = 0.7 (Zones I, IIa, IIb) | α = 1.0 (Zone III)
+// Mêmes paliers mais T2 réduits (voir SV_)
+function Sav(T,A,n,al,T1,T2){
+  if(T<=0)return 0;
+  const base=2.5*n*A*G_*al;
+  if(T<T1) return A*G_*al*(1+(T/T1)*(2.5*n-1));
+  if(T<=T2)return base;
+  if(T<=3) return base*(T2/T);
+  return base*(3*T2/(T*T));
+}
+
+// Spectre de dimensionnement Sad (RPOA Ch.1 p.9)
+// 0 < T ≤ T2  : Sad = 2.5·η·A·g·S
+// T2 < T ≤ 3s : Sad = 2.5·η·A·g·S·(T2/T)
+// T > 3s      : Sad = 2.5·η·A·g·S·(T2/3)^(2/3)·(3/T)^(5/3)
+function Sad(T,A,n,S,T2){
+  if(T<=0)return 0;
+  const base=2.5*n*A*G_*S;
+  if(T<=T2)return base;
+  if(T<=3) return base*(T2/T);
+  return base*Math.pow(T2/3,2/3)*Math.pow(3/T,5/3);
+}
+
+// ════════════════════════════════════════════════════
+// CANVAS DRAWING
+// ════════════════════════════════════════════════════
+function drawSpec(id,curves,Tmark=null){
+  const c=document.getElementById(id);if(!c)return;
+  c.width=c.parentElement.offsetWidth||700;
+  const W=c.width,H=c.height,pL=52,pR=18,pT=16,pB=34,Tmax=5;
+  const pw=W-pL-pR,ph=H-pT-pB;
+  const ctx=c.getContext('2d');
+  const bg=isDark?'#060910':'#f5f7ff',grid=isDark?'#111b30':'#e0e5f0',ax=isDark?'#1e2d50':'#c0cce0',txt=isDark?'#3a506e':'#8090b0';
+  ctx.fillStyle=bg;ctx.fillRect(0,0,W,H);
+  let mx=0;curves.forEach(({fn})=>{for(let i=1;i<=200;i++){const v=fn(i*Tmax/200);if(v>mx)mx=v;}});
+  mx=mx*1.12||10;
+  ctx.strokeStyle=grid;ctx.lineWidth=.8;
+  for(let i=0;i<=5;i++){const x=pL+pw*i/5;ctx.beginPath();ctx.moveTo(x,pT);ctx.lineTo(x,pT+ph);ctx.stroke();}
+  for(let i=0;i<=4;i++){const y=pT+ph*i/4;ctx.beginPath();ctx.moveTo(pL,y);ctx.lineTo(pL+pw,y);ctx.stroke();}
+  ctx.fillStyle=txt;ctx.font='9.5px DM Mono,monospace';
+  for(let i=0;i<=5;i++){ctx.textAlign='center';ctx.fillText(i+'',pL+pw*i/5,pT+ph+13);}
+  for(let i=0;i<=4;i++){ctx.textAlign='right';ctx.fillText((mx*(4-i)/4).toFixed(2),pL-4,pT+ph*i/4+4);}
+  ctx.textAlign='center';ctx.fillText('T (s)',pL+pw/2,H-3);
+  ctx.save();ctx.translate(11,pT+ph/2);ctx.rotate(-Math.PI/2);ctx.fillText('Sa (m/s²)',0,0);ctx.restore();
+  ctx.strokeStyle=ax;ctx.lineWidth=1.2;
+  ctx.beginPath();ctx.moveTo(pL,pT);ctx.lineTo(pL,pT+ph);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(pL,pT+ph);ctx.lineTo(pL+pw,pT+ph);ctx.stroke();
+  if(Tmark){
+    const xm=pL+(Tmark/Tmax)*pw;
+    ctx.strokeStyle='rgba(240,168,48,.5)';ctx.lineWidth=1;ctx.setLineDash([4,3]);
+    ctx.beginPath();ctx.moveTo(xm,pT);ctx.lineTo(xm,pT+ph);ctx.stroke();ctx.setLineDash([]);
+  }
+  curves.forEach(({fn,col,lbl},i)=>{
+    ctx.strokeStyle=col;ctx.lineWidth=2;ctx.beginPath();
+    for(let j=0;j<=400;j++){const T=j*Tmax/400,y=pT+(1-fn(T)/mx)*ph,x=pL+(T/Tmax)*pw;j===0?ctx.moveTo(x,y):ctx.lineTo(x,y);}
+    ctx.stroke();
+    if(lbl){ctx.fillStyle=col;ctx.font='10px DM Sans,sans-serif';ctx.textAlign='left';ctx.fillText(lbl,pL+6+i*75,pT+12);}
+  });
+}
+function redrawAll(){
+  if(!SP.A)return;
+  const {A,n,al,T1,T2,S,T1v,T2v,Tq}=SP;
+  drawSpec('cH',[{fn:T=>Sah(T,A,n,S,T1,T2),col:'#f0a830',lbl:'Saᵉʰ'}],Tq);
+  drawSpec('cV',[{fn:T=>Sav(T,A,n,al,T1v,T2v),col:'#4a90e8',lbl:'Saᵉᵛ'}],Tq);
+  drawSpec('cD',[{fn:T=>Sad(T,A,n,S,T2),col:'#2ed47a',lbl:'Saᵈ'}],Tq);
+  const zs=['I','IIa','IIb','III'],cs=['#406090','#4a90e8','#f0a830','#e84848'];
+  drawSpec('cAll',zs.map((z,i)=>{const Ai=getA(z,3),s=SH_['S2'];return{fn:T=>Sah(T,Ai,n,s.S,s.T1,s.T2),col:cs[i],lbl:`Zone ${z}`};},Tq));
+}
+
+// ════════════════════════════════════════════════════
+// SPECTRE CALC
+// ════════════════════════════════════════════════════
+function doSpec(){
+  const cl=document.getElementById('sp_cl').value,zn=document.getElementById('sp_zn').value;
+  const si=document.getElementById('sp_si').value,xi=parseFloat(document.getElementById('sp_xi').value);
+  const Tq=parseFloat(document.getElementById('sp_Tq').value)||.4;
+  const A=getA(zn,cl),n=eta(xi),al=alpha(zn),sh=SH_[si],sv=SV_[si];
+  SP={A,n,al,T1:sh.T1,T2:sh.T2,S:sh.S,T1v:sv.T1,T2v:sv.T2,xi,zn,si,cl,Tq};
+  set('rA',A.toFixed(2));set('rS',sh.S.toFixed(1));set('rEta',n.toFixed(4));
+  set('rT1',sh.T1.toFixed(2));set('rT2',sh.T2.toFixed(2));set('rAlpha',al.toFixed(1));
+  const h=Sah(Tq,A,n,sh.S,sh.T1,sh.T2),v2=Sav(Tq,A,n,al,sv.T1,sv.T2),d=Sad(Tq,A,n,sh.S,sh.T2);
+  set('rSaeh',`${h.toFixed(4)} <span class="ru">m/s²</span>`);
+  set('rSaev',`${v2.toFixed(4)} <span class="ru">m/s²</span>`);
+  set('rSaed',`${d.toFixed(4)} <span class="ru">m/s²</span>`);
+  setTimeout(redrawAll,60);
+  setStat('spec','bok','✓ OK');toast('Spectre calculé ✓','ok');
+}
+
+// ════════════════════════════════════════════════════
+// SENSITIVITY
+// ════════════════════════════════════════════════════
+function doSens(){
+  const cl=document.getElementById('se_cl').value,T=parseFloat(document.getElementById('se_T').value)||.4;
+  const xi=parseFloat(document.getElementById('se_xi').value)||5,n_=eta(xi);
+  const zones=['I','IIa','IIb','III'],sites=['S1','S2','S3','S4'];
+  const zc={'I':'#4060a0','IIa':'#4a90e8','IIb':'#f0a830','III':'#e84848'};
+  let h=`<div class="card" style="margin-bottom:12px"><div class="ctitle ca">Saᵉʰ(T=${T}s) — Zones × Sites</div>
+    <table class="dt"><thead><tr><th>Zone/Site</th>${sites.map(s=>`<th>${s}</th>`).join('')}</tr></thead><tbody>`;
+  zones.forEach(z=>{
+    const A_=getA(z,cl);
+    h+=`<tr><td style="color:${zc[z]};font-weight:600">${z}</td>${sites.map(s=>{
+      const sh=SH_[s],v=Sah(T,A_,n_,sh.S,sh.T1,sh.T2),pct=Math.min(v/10*100,100);
+      return `<td><span class="mono" style="color:${zc[z]}">${v.toFixed(3)}</span><div class="pb"><div class="pbf ${pct>70?'bad':pct>40?'warn':'ok'}" style="width:${pct}%"></div></div></td>`;
+    }).join('')}</tr>`;
+  });
+  h+='</tbody></table></div>';
+  h+=`<div class="card"><div class="ctitle cb">Saᵉʰ(T=${T}s) — Variation ξ — Zone IIa S2</div><div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px">`;
+  [2,3,4,5,7,10,15,20].forEach(xi2=>{
+    const n2=eta(xi2),A2=getA('IIa',cl),sh=SH_['S2'],v=Sah(T,A2,n2,sh.S,sh.T1,sh.T2);
+    h+=`<div class="ri"><div class="rl">ξ=${xi2}%</div><div class="rv">${v.toFixed(3)}<span class="ru">m/s²</span></div><div class="pb" style="margin-top:4px"><div class="pbf ok" style="width:${Math.min(v*15,100)}%"></div></div></div>`;
+  });
+  h+='</div></div>';
+  // Canvas comparison
+  h+=`<div class="card" style="margin-top:12px"><div class="ctitle ca">Courbes de sensibilité — Zone IIa S2 — variation ξ</div><canvas id="cSens" height="200" style="width:100%;border-radius:6px;border:1px solid var(--bord)"></canvas></div>`;
+  set('sensRes',h);
+  setStat('sens','bok','✓ OK');
+  setTimeout(()=>{
+    const A2=getA('IIa',cl),sh=SH_['S2'];
+    const xis=[2,5,7,10],cs_=['#f0a830','#4a90e8','#2ed47a','#e84848'];
+    drawSpec('cSens',xis.map((xi2,i)=>{const n2=eta(xi2);return{fn:T=>Sah(T,A2,n2,sh.S,sh.T1,sh.T2),col:cs_[i],lbl:`ξ=${xi2}%`};}),T);
+  },60);
+  toast('Analyse de sensibilité ✓','ok');
+}
+
+// ════════════════════════════════════════════════════
+// MULTI-SCENARIO
+// ════════════════════════════════════════════════════
+function sceCalc(pfx){
+  const cl=document.getElementById(pfx+'_cl').value,zn=document.getElementById(pfx+'_zn').value;
+  const si=document.getElementById(pfx+'_si').value,xi=parseFloat(document.getElementById(pfx+'_xi').value)||5;
+  const M=parseFloat(document.getElementById(pfx+'_M').value)||0,K=parseFloat(document.getElementById(pfx+'_K').value)||1;
+  const A=getA(zn,cl),n=eta(xi),sh=SH_[si],sv=SV_[si],al=alpha(zn);
+  const T=2*Math.PI*Math.sqrt(M*1000/(K*1000));
+  const Sah_=Sah(T,A,n,sh.S,sh.T1,sh.T2),Sav_=Sav(T,A,n,al,sv.T1,sv.T2);
+  const F=M*Sah_,D=Math.pow(T/(2*Math.PI),2)*Sah_;
+  return {A,n,al,T,Sah:Sah_,Sav:Sav_,F,D,zn,si,M,K,xi};
+}
+function doSce(){
+  const a=sceCalc('sA'),b=sceCalc('sB');
+  const diff=(va,vb)=>{const r=(vb-va)/Math.abs(va||1)*100;const c=r>0?'r':'g';return `<span class="mono ${c}">${r>=0?'+':''}${r.toFixed(1)}%</span>`;};
+  const h=`<div class="g2">
+    <div class="card al"><div class="sce-badge sce-A">SCÉNARIO A</div>
+      <table class="dt">
+        <tr><td>Zone / Site</td><td class="mono">${a.zn} / ${a.si}</td></tr>
+        <tr><td>A</td><td class="mono">${a.A.toFixed(2)}</td></tr>
+        <tr><td>T (s)</td><td class="mono" style="color:var(--acc)">${a.T.toFixed(4)}</td></tr>
+        <tr><td>Saᵉʰ (m/s²)</td><td class="mono">${a.Sah.toFixed(4)}</td></tr>
+        <tr><td>F total (KN)</td><td class="mono" style="color:var(--acc)">${a.F.toFixed(2)}</td></tr>
+        <tr><td>D (m)</td><td class="mono">${a.D.toFixed(5)}</td></tr>
+      </table>
+    </div>
+    <div class="card pl"><div class="sce-badge sce-B">SCÉNARIO B</div>
+      <table class="dt">
+        <tr><td>Zone / Site</td><td class="mono">${b.zn} / ${b.si}</td></tr>
+        <tr><td>A</td><td class="mono">${b.A.toFixed(2)}</td></tr>
+        <tr><td>T (s)</td><td class="mono" style="color:var(--pur)">${b.T.toFixed(4)}</td></tr>
+        <tr><td>Saᵉʰ (m/s²)</td><td class="mono">${b.Sah.toFixed(4)}</td></tr>
+        <tr><td>F total (KN)</td><td class="mono" style="color:var(--pur)">${b.F.toFixed(2)}</td></tr>
+        <tr><td>D (m)</td><td class="mono">${b.D.toFixed(5)}</td></tr>
+      </table>
+    </div>
+  </div>
+  <div class="card" style="margin-top:12px"><div class="ctitle cb">Comparaison B vs A (variation %)</div>
+    <table class="dt"><thead><tr><th>Paramètre</th><th>Scén. A</th><th>Scén. B</th><th>ΔB/A</th></tr></thead><tbody>
+      <tr><td>A (coeff.)</td><td class="mono">${a.A.toFixed(2)}</td><td class="mono">${b.A.toFixed(2)}</td><td>${diff(a.A,b.A)}</td></tr>
+      <tr><td>T (s)</td><td class="mono">${a.T.toFixed(3)}</td><td class="mono">${b.T.toFixed(3)}</td><td>${diff(a.T,b.T)}</td></tr>
+      <tr><td>Saᵉʰ (m/s²)</td><td class="mono">${a.Sah.toFixed(4)}</td><td class="mono">${b.Sah.toFixed(4)}</td><td>${diff(a.Sah,b.Sah)}</td></tr>
+      <tr><td>F (KN)</td><td class="mono">${a.F.toFixed(1)}</td><td class="mono">${b.F.toFixed(1)}</td><td>${diff(a.F,b.F)}</td></tr>
+      <tr><td>D (m)</td><td class="mono">${a.D.toFixed(5)}</td><td class="mono">${b.D.toFixed(5)}</td><td>${diff(a.D,b.D)}</td></tr>
+    </tbody></table>
+  </div>
+  <div class="card" style="margin-top:12px"><div class="ctitle">Spectres superposés</div>
+    <canvas id="cSce" height="200" style="width:100%;border-radius:6px;border:1px solid var(--bord)"></canvas>
+  </div>`;
+  set('sceRes',h);
+  setStat('sce','bok','✓ OK');
+  setTimeout(()=>{
+    const shA=SH_[document.getElementById('sA_si').value],znA=document.getElementById('sA_zn').value;
+    const shB=SH_[document.getElementById('sB_si').value],znB=document.getElementById('sB_zn').value;
+    const clA=document.getElementById('sA_cl').value,xiA=parseFloat(document.getElementById('sA_xi').value)||5;
+    const clB=document.getElementById('sB_cl').value,xiB=parseFloat(document.getElementById('sB_xi').value)||5;
+    drawSpec('cSce',[
+      {fn:T=>Sah(T,getA(znA,clA),eta(xiA),shA.S,shA.T1,shA.T2),col:'#4a90e8',lbl:'Scén. A'},
+      {fn:T=>Sah(T,getA(znB,clB),eta(xiB),shB.S,shB.T1,shB.T2),col:'#a060f0',lbl:'Scén. B'}
+    ]);
+  },60);
+  toast('Comparaison effectuée ✓','ok');
+}
+
+// ── PONT À POUTRES BP (RPOA §1.7.1.2a + Mémoire Ch.3 §3.2.2) ──────
+// Masse : M = G_tablier × n_travées + (Pchev + 0.5×P_fût)  [RPOA §1.6.3.2]
+// I fût  : I = π·D⁴/64  (section circulaire)
+// K pile : K = n_fûts × enc × E·I/h³  [enc=3 articulé, enc=12 encastré]
+// K app  : K_app = n_app × G × a × b / e  (en KN/m, G en KN/m³)
+// K total par appui (pile) : K_tot = 1/(1/K_app + 1/K_pile)  [mise en série]
+// K total culée            : K_culée = n_app_culée × G × a × b / e  (libre → app seul)
+// K système : K_sys = 2×K_culée + n_piles×K_tot_pile  [RPOA §1.7.1.2a]
+// T = 2π√(M/K)  |  F = M·Sae(T)  |  Fi = (Ki/K)·F
+function doPou(){
+  try{
+  const Gt=v('pu_Gt'),nt=vi('pu_nt'),Gp=v('pu_Gp'),np=vi('pu_np');
+  const nf=vi('pu_nf'),D=v('pu_D'),h=v('pu_h'),Eb=v('pu_Eb'),enc=vi('pu_enc');
+  const nap=vi('pu_nap'),nac=vi('pu_nac'),a=v('pu_a')/100,b=v('pu_b')/100,e=v('pu_e')/100,Ga=v('pu_G');
+  const cl=document.getElementById('pu_cl').value,zn=document.getElementById('pu_zn').value;
+  const si=document.getElementById('pu_si').value,xi=v('pu_xi');
+  if(!Gt||!D||!h){toast('⚠️ Données manquantes','warn');return;}
+  const I=Math.PI*Math.pow(D,4)/64;
+  const Kp=nf*enc*Eb*I/Math.pow(h,3);
+  const Kap=nap*Ga*a*b/e,Kac=nac*Ga*a*b/e;
+  const Ktp=1/(1/Kap+1/Kp),Ktc=Kac,Ks=2*Ktc+np*Ktp;
+  const M=Gt*nt+Gp,A=getA(zn,cl),n=eta(xi),al=alpha(zn);
+  const sh=SH_[si],sv=SV_[si];
+  const T=2*Math.PI*Math.sqrt(M*1000/(Ks*1000));
+  const Sh=Sah(T,A,n,sh.S,sh.T1,sh.T2),Sv=Sav(T,A,n,al,sv.T1,sv.T2),Sd=Sad(T,A,n,sh.S,sh.T2);
+  const F=M*Sh,Fc=Ktc/Ks*F,Fp=Ktp/Ks*F,Dt=Math.pow(T/(2*Math.PI),2)*Sh,Dp=Fp/Kp;
+  const LB=v('pu_L')/v('pu_B'),rigid=LB>=5;
+  POU={I,Kp,Kap,Kac,Ktp,Ktc,Ks,M,T,Sh,Sv,Sd,F,Fc,Fp,Dt,Dp,A,n,al,sh,sv,LB,rigid,nf,enc};
+  set('kT',T.toFixed(3));set('kF',F.toFixed(0)+' KN');set('kD',Dt.toFixed(4)+' m');
+  setStat('pou','bok','✓ OK');
+  const b2=o=>o?'<span class="badge bok">✓</span>':'<span class="badge bnok">✗</span>';
+  set('pouRes',`
+    <div class="chips">
+      <div class="chip">Zone: <strong>${zn}</strong></div><div class="chip">A=<strong>${A}</strong></div>
+      <div class="chip">M=<strong>${M.toFixed(1)} t</strong></div><div class="chip">T=<strong>${T.toFixed(4)} s</strong></div>
+      <div class="chip">Tablier: <strong>${rigid?'RIGIDE':'FLEXIBLE'}</strong> ${b2(rigid)}</div>
+    </div>
+    <div class="g3">
+      <div class="card al"><div class="ctitle ca">Raideurs (KN/m)</div>
+        <table class="dt">
+          <tr><td>I fût</td><td class="mono">${I.toFixed(6)} m⁴</td></tr>
+          <tr><td>K pile</td><td class="mono">${Kp.toFixed(1)}</td></tr>
+          <tr><td>K app/pile</td><td class="mono">${Kap.toFixed(1)}</td></tr>
+          <tr><td>K app/culée</td><td class="mono">${Kac.toFixed(1)}</td></tr>
+          <tr><td>K tot pile</td><td class="mono">${Ktp.toFixed(2)}</td></tr>
+          <tr><td>K tot culée</td><td class="mono">${Ktc.toFixed(2)}</td></tr>
+          <tr><td><b>K système</b></td><td class="mono" style="color:var(--acc)">${Ks.toFixed(2)}</td></tr>
+        </table>
+      </div>
+      <div class="card bl"><div class="ctitle cb">Période & Spectres</div>
+        <table class="dt">
+          <tr><td>Masse M</td><td class="mono">${M.toFixed(2)} t</td></tr>
+          <tr><td><b>T fondamental</b></td><td class="mono" style="color:var(--acc)">${T.toFixed(4)} s</td></tr>
+          <tr><td>Saᵉʰ(T)</td><td class="mono">${Sh.toFixed(4)} m/s²</td></tr>
+          <tr><td>Saᵉᵛ(T)</td><td class="mono b">${Sv.toFixed(4)} m/s²</td></tr>
+          <tr><td>Saᵈ(T)</td><td class="mono g">${Sd.toFixed(4)} m/s²</td></tr>
+        </table>
+      </div>
+      <div class="card gl"><div class="ctitle cg">Forces & Déplacements</div>
+        <table class="dt">
+          <tr><td><b>F total</b></td><td class="mono" style="color:var(--acc)">${F.toFixed(2)} KN</td></tr>
+          <tr><td>F/culée</td><td class="mono">${Fc.toFixed(2)} KN</td></tr>
+          <tr><td>F/pile</td><td class="mono">${Fp.toFixed(2)} KN</td></tr>
+          <tr><td>D tablier</td><td class="mono">${Dt.toFixed(5)} m</td></tr>
+          <tr><td>D tête pile</td><td class="mono">${Dp.toFixed(5)} m</td></tr>
+          <tr><td>D culée</td><td class="mono">0.0 m</td></tr>
+        </table>
+      </div>
+    </div>
+    <div class="fbox">I=π·D⁴/64=${I.toFixed(6)} m⁴  |  K_pile=${nf}×${enc}EI/h³=${Kp.toFixed(0)} KN/m
+T=2π√(${M.toFixed(0)}×10³/${Ks.toFixed(0)}×10³)=${T.toFixed(4)} s
+F=M·Sa=${M.toFixed(1)}×${Sh.toFixed(4)}=${F.toFixed(2)} KN  |  D=(T/2π)²·Sa=${Dt.toFixed(5)} m</div>
+  `);
+  updateSummary();toast('Calcul pont à poutres ✓','ok');
+  }catch(e){toast('Erreur calcul: '+e.message,'err');console.error(e);}
+}
+
+// ════════════════════════════════════════════════════
+// VOUSSOIR
+// ════════════════════════════════════════════════════
+function doVou(){
+  try{
+  const Mt=v('vou_Mt'),Mp=v('vou_Mp'),L=v('vou_L'),B=v('vou_B');
+  const lt=v('vou_lt'),h=v('vou_h'),bp=v('vou_bp'),Hp=v('vou_Hp');
+  const Iz=v('vou_Iz'),Iy=v('vou_Iy'),Eb=v('vou_Eb');
+  const na=vi('vou_na'),Ga=v('vou_Ga'),a=v('vou_a')/100,ba=v('vou_ba')/100,ea=v('vou_ea')/100;
+  const cl=document.getElementById('vou_cl').value,zn=document.getElementById('vou_zn').value;
+  const si=document.getElementById('vou_si').value,xi=v('vou_xi');
+  const M=Mt+Mp,cond=Mp<=0.43*Mt,LB=L/B,flex=LB>5;
+  const Ip=bp*Math.pow(Hp,3)/12,Kp=12*Eb*Ip/Math.pow(h,3);
+  // Ka = raideur d'un appareil, Ktc = raideur d'une culée (na appareils en parallèle)
+  const Ka=Ga*a*ba/ea;        // raideur unitaire d'un appareil (MN/m)
+  const Ktc=na*Ka;             // raideur d'une culée (na appareils)
+  const Ktp=1/(1/Ktc+1/Kp);   // raideur en série pile-appareils
+  const Ks=2*Ktc+Ktp;         // système global (2 culées + 1 pile)
+  const T=2*Math.PI*Math.sqrt(M*1000/(Ks*1e6));
+  const A=getA(zn,cl),n=eta(xi),al=alpha(zn),sh=SH_[si],sv=SV_[si];
+  const Sh=Sah(T,A,n,sh.S,sh.T1,sh.T2),Sv=Sav(T,A,n,al,sv.T1,sv.T2),Sd=Sad(T,A,n,sh.S,sh.T2);
+  const F=M*1000*Sh/1e6,Fc=Ktc/Ks*F,Fp=Ktp/Ks*F,Dt=Math.pow(T/(2*Math.PI),2)*Sh,Dp=Fp/Kp;
+  VOU={Mt,Mp,M,LB,flex,cond,Ip,Kp,Ka,Ktp,Ktc,Ks,T,Sh,Sv,Sd,F,Fc,Fp,Dt,Dp,A,n,al,sh,sv,lt,Iz,Iy,Eb,xi,zn,si,cl};
+  const b2=o=>o?'<span class="badge bok">✓</span>':'<span class="badge bnok">✗</span>';
+  const r=`<div class="chips">
+    <div class="chip">T=<strong>${T.toFixed(4)} s</strong></div>
+    <div class="chip">Cond. monomodale: ${b2(cond)}</div>
+    <div class="chip">L/B=${LB.toFixed(1)}: <strong>${flex?'Flexible':'Rigide'}</strong></div>
+  </div>
+  <div class="g3">
+    <div class="card al"><div class="ctitle ca">Raideurs (MN/m)</div>
+      <table class="dt">
+        <tr><td>Ip voile</td><td class="mono">${Ip.toFixed(4)} m⁴</td></tr>
+        <tr><td>K pile</td><td class="mono">${Kp.toFixed(3)}</td></tr>
+        <tr><td>K app</td><td class="mono">${Ka.toFixed(4)}</td></tr>
+        <tr><td>K tot pile</td><td class="mono">${Ktp.toFixed(4)}</td></tr>
+        <tr><td><b>K système</b></td><td class="mono" style="color:var(--acc)">${Ks.toFixed(4)}</td></tr>
+      </table>
+    </div>
+    <div class="card bl"><div class="ctitle cb">T & Spectres</div>
+      <table class="dt">
+        <tr><td>M</td><td class="mono">${M.toFixed(2)} t</td></tr>
+        <tr><td>0.43·Mt</td><td class="mono">${(0.43*Mt).toFixed(2)} t</td></tr>
+        <tr><td>Mp</td><td class="mono">${Mp.toFixed(2)} t ${b2(cond)}</td></tr>
+        <tr><td><b>T long.</b></td><td class="mono" style="color:var(--acc)">${T.toFixed(4)} s</td></tr>
+        <tr><td>Saᵉʰ</td><td class="mono">${Sh.toFixed(4)} m/s²</td></tr>
+        <tr><td>Saᵉᵛ</td><td class="mono b">${Sv.toFixed(4)} m/s²</td></tr>
+      </table>
+    </div>
+    <div class="card gl"><div class="ctitle cg">Forces (MN)</div>
+      <table class="dt">
+        <tr><td><b>F long.</b></td><td class="mono" style="color:var(--acc)">${F.toFixed(4)}</td></tr>
+        <tr><td>F/culée</td><td class="mono">${Fc.toFixed(4)}</td></tr>
+        <tr><td>F/pile</td><td class="mono">${Fp.toFixed(4)}</td></tr>
+        <tr><td>D tablier</td><td class="mono">${Dt.toFixed(5)} m</td></tr>
+        <tr><td>D pile</td><td class="mono">${Dp.toFixed(6)} m</td></tr>
+      </table>
+    </div>
+  </div>
+  <div class="fbox">T=2π√(${M.toFixed(0)}×10³/${Ks.toFixed(4)}×10⁶)=${T.toFixed(4)} s
+F=M·Sae=${M.toFixed(0)}×${Sh.toFixed(4)}=${F.toFixed(4)} MN
+Cond monomodale: Mp=${Mp.toFixed(1)} ≤ 0.43×${Mt}=${(0.43*Mt).toFixed(1)} → ${cond?'✓':'✗'}</div>`;
+  set('vouRaid',r);set('vlRes',r);
+  set('kT',T.toFixed(3));set('kF',F.toFixed(3)+' MN');set('kD',Dt.toFixed(5)+' m');
+  setStat('vou','bok','✓ OK');updateSummary();toast('Voussoirs calculé ✓','ok');
+  }catch(e){toast('Erreur voussoirs: '+e.message,'err');console.error(e);}
+}
+
+// GAUSS JORDAN
+function gaussJ(A,b){
+  const n=A.length,M=A.map((r,i)=>[...r,b[i]]);
+  for(let c=0;c<n;c++){
+    let mr=c;for(let r=c+1;r<n;r++)if(Math.abs(M[r][c])>Math.abs(M[mr][c]))mr=r;
+    [M[c],M[mr]]=[M[mr],M[c]];
+    const pv=M[c][c];if(Math.abs(pv)<1e-15)continue;
+    for(let j=c;j<=n;j++)M[c][j]/=pv;
+    for(let r=0;r<n;r++){if(r===c)continue;const f=M[r][c];for(let j=c;j<=n;j++)M[r][j]-=f*M[c][j];}
+  }
+  return M.map(r=>r[n]);
+}
+
+function doTrans(){
+  if(!VOU.Ks)doVou();
+  const nn=vi('tr_nn'),mi_=v('tr_mi'),m1_=v('tr_m1');
+  const Kt=v('tr_Kt')*1e6,K1=v('tr_K1')*1e6;
+  const {A,n,sh}=VOU;
+  const ms=Array.from({length:nn},(_,i)=>i===Math.floor(nn/2)?m1_*1e3:mi_*1e3);
+  const K=Array.from({length:nn},()=>Array(nn).fill(0));
+  for(let i=0;i<nn;i++){
+    // Nœuds d'extrémité : tablier + appui de culée (fixe → Kt seul car culée = inf)
+    // Nœuds intermédiaires : deux tronçons tablier
+    K[i][i]=(i===0||i===nn-1)?Kt:2*Kt;
+    if(i>0){K[i][i-1]=K[i-1][i]=-Kt;}
+  }
+  // Pile centrale : raideur additionnelle
+  const mc=Math.floor(nn/2);
+  K[mc][mc]+=K1;
+  const U=gaussJ(K,ms.map(m=>m*G_));
+  const s2=ms.reduce((s,m,i)=>s+m*U[i]*U[i],0),s1=ms.reduce((s,m,i)=>s+m*U[i],0);
+  const T_=2*Math.PI*Math.sqrt(s2/(s1*G_)),Sa_=Sah(T_,A,n,sh.S,sh.T1,sh.T2);
+  const fac=Math.pow(2*Math.PI/T_,2)*Sa_/G_,Fi=ms.map((m,i)=>fac*U[i]*m/1e6);
+  const rows=ms.map((m,i)=>`<tr><td>${i+1}</td><td class="mono">${(m/1e3).toFixed(2)} t</td><td class="mono">${U[i].toExponential(3)}</td><td class="mono">${Fi[i].toFixed(5)} MN</td></tr>`).join('');
+  set('vtRes',`<div class="chips">
+    <div class="chip">T Rayleigh: <strong>${T_.toFixed(4)} s</strong></div>
+    <div class="chip">Sa: <strong>${Sa_.toFixed(4)} m/s²</strong></div>
+    <div class="chip">ΣF: <strong>${Fi.reduce((s,f)=>s+f,0).toFixed(4)} MN</strong></div>
+  </div>
+  <div class="card"><div class="ctitle cp">Modèle brochette — Forces nodales (Rayleigh)</div>
+    <table class="dt"><thead><tr><th>Nœud</th><th>Masse (t)</th><th>U (m)</th><th>Fᵢ (MN)</th></tr></thead><tbody>${rows}</tbody></table>
+  </div>
+  <div class="fbox">T=2π√(ΣmU²/ΣmU·g)=${T_.toFixed(4)} s  |  Sa=${Sa_.toFixed(4)} m/s²
+Fᵢ=(2π/T)²·Sa/g·Uᵢ·mᵢ  |  ΣFᵢ=${Fi.reduce((s,f)=>s+f,0).toFixed(4)} MN</div>`);
+  toast('Séisme transversal ✓','ok');
+}
+
+function doVert(){
+  if(!VOU.Ks)doVou();
+  const nn=vi('vt_nn'),mi_=v('vt_mi'),Iy=v('vt_Iy'),Eb=v('vt_Eb'),L1=v('vt_L1'),L2=v('vt_L2');
+  const {A,n,al,sv}=VOU;
+  const ms=Array(nn).fill(mi_*1e3);
+  const K1_=3*Eb*Iy/Math.pow(L1,2)*1e6,K2_=3*Eb*Iy/Math.pow(L2,2)*1e6;
+  const K=Array.from({length:nn},()=>Array(nn).fill(0));
+  for(let i=0;i<nn;i++){const ki=i%2===0?K1_:K2_;K[i][i]=ki*2;if(i>0)K[i][i-1]=K[i-1][i]=-ki;}
+  const V=gaussJ(K,ms.map(m=>m*G_));
+  const s2=ms.reduce((s,m,i)=>s+m*V[i]*V[i],0),s1=ms.reduce((s,m,i)=>s+m*V[i],0);
+  const T_=2*Math.PI*Math.sqrt(s2/(s1*G_)),Sa_=Sav(T_,A,n,al,sv.T1,sv.T2);
+  const fac=Math.pow(2*Math.PI/T_,2)*Sa_/G_,Fv=ms.map((m,i)=>fac*V[i]*m/1e6);
+  const rows=ms.map((m,i)=>`<tr><td>${i+1}</td><td class="mono">${(m/1e3).toFixed(2)} t</td><td class="mono">${V[i].toExponential(3)}</td><td class="mono">${Fv[i].toFixed(5)} MN</td></tr>`).join('');
+  set('vvRes',`<div class="chips">
+    <div class="chip">T vert.: <strong>${T_.toFixed(4)} s</strong></div>
+    <div class="chip">Saᵛ: <strong>${Sa_.toFixed(4)} m/s²</strong></div>
+    <div class="chip">ΣFᵛ: <strong>${Fv.reduce((s,f)=>s+f,0).toFixed(4)} MN</strong></div>
+  </div>
+  <div class="card"><div class="ctitle cg">Forces verticales nodales</div>
+    <table class="dt"><thead><tr><th>Nœud</th><th>Masse (t)</th><th>V (m)</th><th>Fᵢᵛ (MN)</th></tr></thead><tbody>${rows}</tbody></table>
+  </div>
+  <div class="fbox">K1=3EIy/L1²=${(K1_/1e6).toFixed(2)} MN/m  |  K2=${(K2_/1e6).toFixed(2)} MN/m
+T=${T_.toFixed(4)} s  |  Saeᵛ=${Sa_.toFixed(4)} m/s²  |  ΣFᵛ=${Fv.reduce((s,f)=>s+f,0).toFixed(4)} MN</div>
+  <div class="alert aw">⚠️ RPOA Art. 1.7.1.2a: vérifier systématiquement la composante verticale ascendante pour tabliers BP.</div>`);
+  toast('Séisme vertical ✓','ok');
+}
+
+// ════════════════════════════════════════════════════
+// APPAREILS D'APPUI
+// ════════════════════════════════════════════════════
+function doApp(){
+  const a=v('ae_a')/100,b=v('ae_b')/100,T=v('ae_T')/100,nc=vi('ae_n'),G=v('ae_G');
+  const Nmax=v('ae_Nmax'),Nmin=v('ae_Nmin'),Hs=v('ae_Hs'),eps_=v('ae_eps')/100;
+  const Hbc=v('ae_Hbc'),Hal=v('ae_Hal'),Hve=v('ae_Hve'),U=v('ae_U')/100;
+  const A_=a*b,tel=T/nc,beta=(a*b)/(2*tel*(a+b));
+  const tauN=1.5*Nmax/(A_*beta),sigMin=Nmin/A_,tauH1=G*U/T;
+  const tauHs=tauH1+0.5*Hs/A_,tauHbc=tauH1+0.5*Hbc/A_;
+  const tauHal=tauH1+0.5*Hal/A_,tauHve=tauH1+0.5*Hve/A_;
+  const f_=0.12+0.6/sigMin,Hgl=f_*Nmin,gtot=tauN/G+tauHs/G+eps_/T;
+  const cks=[tauN<3*G,sigMin>=2,tauHs<1.3*G,tauHbc<0.7*G,tauHal<0.7*G,tauHve<0.7*G,Hs<Hgl,eps_<0.7*T,gtot<=2.5];
+  const allOk=cks.every(Boolean),pass=cks.filter(Boolean).length;
+  APP={beta,tauN,sigMin,tauHs,tauHbc,tauHal,tauHve,f_,Hgl,gtot,G,allOk,pass,a,b,T,nc};
+  const b2=o=>o?'<span class="badge bok">✓</span>':'<span class="badge bnok">✗</span>';
+  set('kApp',pass+'/9');
+  setStat('app',allOk?'bok':'bnok',allOk?'✓ Tout OK':'⚠️ '+pass+'/9');
+  set('appRes',`
+    <div class="chips">
+      <div class="chip">β=<strong>${beta.toFixed(3)}</strong></div>
+      <div class="chip">f=<strong>${f_.toFixed(4)}</strong></div>
+      <div class="chip"><span class="badge ${allOk?'bok':'bnok'}">${pass}/9 OK</span></div>
+    </div>
+    <table class="dt"><thead><tr><th>Vérification</th><th>Valeur</th><th>Limite</th><th></th></tr></thead><tbody>
+      <tr><td>τN compression</td><td class="mono">${tauN.toFixed(4)} MPa</td><td class="mono">3G=${(3*G).toFixed(2)}</td><td>${b2(cks[0])}</td></tr>
+      <tr><td>σmin ≥ 2 MPa</td><td class="mono">${sigMin.toFixed(4)} MPa</td><td class="mono">2.0</td><td>${b2(cks[1])}</td></tr>
+      <tr><td>τH séisme &lt; 1.3G</td><td class="mono">${tauHs.toFixed(4)}</td><td class="mono">${(1.3*G).toFixed(2)}</td><td>${b2(cks[2])}</td></tr>
+      <tr><td>τH freinage Bc</td><td class="mono">${tauHbc.toFixed(4)}</td><td class="mono">${(0.7*G).toFixed(2)}</td><td>${b2(cks[3])}</td></tr>
+      <tr><td>τH freinage A(L)</td><td class="mono">${tauHal.toFixed(4)}</td><td class="mono">${(0.7*G).toFixed(2)}</td><td>${b2(cks[4])}</td></tr>
+      <tr><td>τH vent</td><td class="mono">${tauHve.toFixed(4)}</td><td class="mono">${(0.7*G).toFixed(2)}</td><td>${b2(cks[5])}</td></tr>
+      <tr><td>Non-glissement</td><td class="mono">Hs=${Hs.toFixed(4)} | f·N=${Hgl.toFixed(4)}</td><td>Hs&lt;f·N</td><td>${b2(cks[6])}</td></tr>
+      <tr><td>Déformation ε&lt;0.7T</td><td class="mono">ε=${eps_.toFixed(4)} m</td><td class="mono">0.7T=${(0.7*T).toFixed(4)}</td><td>${b2(cks[7])}</td></tr>
+      <tr><td>Distorsion γ≤2.5</td><td class="mono">${gtot.toFixed(3)}</td><td class="mono">2.5</td><td>${b2(cks[8])}</td></tr>
+    </tbody></table>
+    <div class="fbox">β=${beta.toFixed(3)}  |  τH1=G·U/T=${tauH1.toFixed(4)} MPa
+f=0.12+0.6/${sigMin.toFixed(3)}=${f_.toFixed(4)}  |  f·Nmin=${Hgl.toFixed(4)} MN</div>
+    <div class="alert ${allOk?'ag':'ae'}">${allOk?'✅ Toutes les vérifications sont satisfaites.':'⚠️ '+[3,4,5,6,7,8].filter(i=>!cks[i]).length+' vérification(s) non satisfaite(s) — Revoir les dimensions.'}</div>
+  `);
+  updateSummary();toast(allOk?'Appareils OK ✓':'⚠️ Échec vérification',allOk?'ok':'warn');
+}
+
+// ════════════════════════════════════════════════════
+// EFFORTS HORIZONTAUX
+// ════════════════════════════════════════════════════
+function doEffh(){
+  const Hbc=v('eh_Hbc'),Hal=v('eh_Hal'),p=v('eh_p'),S=v('eh_S');
+  const Fh=v('eh_Fh'),na=vi('eh_na'),G=v('eh_G'),T=v('eh_T')/100;
+  const a=v('eh_a')/100,b_=v('eh_b')/100,eps=v('eh_eps')/100;
+  const Hve=p*S/1e3,Hdef=G*a*b_*(eps/T);
+  const fn=x=>x/na,fu=x=>(x/na).toFixed(6);
+  set('effhRes',`
+    <table class="dt"><thead><tr><th>Effort</th><th>Total (MN)</th><th>Par appui (MN)</th></tr></thead><tbody>
+      <tr><td>Freinage Bc</td><td class="mono">${Hbc.toFixed(4)}</td><td class="mono">${fu(Hbc)}</td></tr>
+      <tr><td>Freinage A(L)</td><td class="mono">${Hal.toFixed(5)}</td><td class="mono">${fu(Hal)}</td></tr>
+      <tr><td>Vent H_ve</td><td class="mono">${Hve.toFixed(5)}</td><td class="mono">${fu(Hve)}</td></tr>
+      <tr><td>Séisme horiz.</td><td class="mono">${Fh.toFixed(4)}</td><td class="mono">${fu(Fh)}</td></tr>
+      <tr><td>Déformation (R+F+T°)</td><td class="mono">${Hdef.toFixed(5)}</td><td class="mono">${Hdef.toFixed(5)}</td></tr>
+    </tbody></table>
+    <div class="div"></div>
+    <div class="ctitle cb">Combinaisons à vérifier</div>
+    <table class="dt"><thead><tr><th>Combinaison</th><th>H total/appui (MN)</th></tr></thead><tbody>
+      <tr><td>Séisme + Déformation</td><td class="mono">${(fn(Fh)+Hdef).toFixed(5)}</td></tr>
+      <tr><td>Freinage Bc + Vent + Déform.</td><td class="mono">${(fn(Hbc)+fn(Hve)+Hdef).toFixed(5)}</td></tr>
+      <tr><td>Freinage A(L) + Vent + Déform.</td><td class="mono">${(fn(Hal)+fn(Hve)+Hdef).toFixed(5)}</td></tr>
+    </tbody></table>
+    <div class="fbox">H_vent=p×S=${p}×${S}=${Hve.toFixed(4)} MN
+H_def=G·a·b·ε/T=${G}×${(a*100).toFixed(0)}×${(b_*100).toFixed(0)}×${eps.toFixed(4)}/${T.toFixed(2)}=${Hdef.toFixed(5)} MN/appui</div>
+  `);
+  toast('Efforts horizontaux calculés ✓','ok');
+}
+
+// ════════════════════════════════════════════════════
+// SUMMARY
+// ════════════════════════════════════════════════════
+function updateSummary(){
+  const nom=document.getElementById('fi_nom')?.value||'—';
+  const ing=document.getElementById('fi_ing')?.value||'—';
+  const date=document.getElementById('fi_date')?.value||new Date().toLocaleDateString('fr');
+  let h=`<div class="card" style="margin-bottom:14px;border-left:3px solid var(--acc)">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
+      <div style="background:var(--acc);color:#000;font-family:'Bebas Neue',sans-serif;font-size:22px;padding:5px 14px;border-radius:4px">RPOA 2008</div>
+      <div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:2px">${nom}</div>
+        <div style="font-size:10px;color:var(--lbl)">${ing} — ${date}</div>
+      </div>
+    </div>`;
+  if(SP.A){h+=`<div class="ctitle ca">Spectre de réponse</div>
+    <table class="dt"><tbody>
+      <tr><td>Zone / Classe / Site</td><td class="mono">${SP.zn} / G${SP.cl} / ${SP.si}</td></tr>
+      <tr><td>A / S / η</td><td class="mono">${SP.A} / ${SP.S} / ${SP.n.toFixed(4)}</td></tr>
+      <tr><td>T1 / T2</td><td class="mono">${SP.T1} s / ${SP.T2} s</td></tr>
+    </tbody></table>`;}
+  if(POU.T){h+=`<div class="ctitle ca" style="margin-top:12px">Pont à poutres</div>
+    <table class="dt"><tbody>
+      <tr><td>T fond.</td><td class="mono">${POU.T.toFixed(4)} s</td></tr>
+      <tr><td>K système</td><td class="mono">${POU.Ks.toFixed(2)} KN/m</td></tr>
+      <tr><td>F total</td><td class="mono">${POU.F.toFixed(2)} KN</td></tr>
+      <tr><td>D tablier</td><td class="mono">${POU.Dt.toFixed(5)} m</td></tr>
+      <tr><td>Tablier</td><td class="mono">${POU.rigid?'Rigide (L/B='+POU.LB.toFixed(1)+')':'Flexible'}</td></tr>
+    </tbody></table>`;}
+  if(VOU.T){h+=`<div class="ctitle ca" style="margin-top:12px">Pont à voussoirs</div>
+    <table class="dt"><tbody>
+      <tr><td>T long.</td><td class="mono">${VOU.T.toFixed(4)} s</td></tr>
+      <tr><td>K système</td><td class="mono">${VOU.Ks.toFixed(4)} MN/m</td></tr>
+      <tr><td>F longitudinal</td><td class="mono">${VOU.F.toFixed(4)} MN</td></tr>
+      <tr><td>D tablier</td><td class="mono">${VOU.Dt.toFixed(5)} m</td></tr>
+      <tr><td>Cond. monomodale</td><td><span class="badge ${VOU.cond?'bok':'bnok'}">${VOU.cond?'✓ OK':'✗ NON'}</span></td></tr>
+    </tbody></table>`;}
+  if(APP.pass!==undefined){h+=`<div class="ctitle ca" style="margin-top:12px">Appareils d'appui</div>
+    <table class="dt"><tbody>
+      <tr><td>β</td><td class="mono">${APP.beta.toFixed(3)}</td></tr>
+      <tr><td>τN compression</td><td class="mono">${APP.tauN.toFixed(4)} MPa</td></tr>
+      <tr><td>σmin</td><td class="mono">${APP.sigMin.toFixed(4)} MPa</td></tr>
+      <tr><td>Vérifications</td><td><span class="badge ${APP.allOk?'bok':'bnok'}">${APP.pass}/9 OK</span></td></tr>
+    </tbody></table>`;}
+  h+='</div>';
+  h+=`<div class="brow"><button class="btn bp" onclick="exportPDF()">📄 <span data-t="h-pdf">Rapport PDF</span></button><button class="btn bs" onclick="saveProject()">💾 <span data-t="h-save">Sauvegarder</span></button></div>`;
+  set('sumContent',h);
+  setStat('sum','bok','✓ Généré');
+  updateProgress();
+}
+
+function updateProgress(){
+  const modules=[SP.A,POU.T,VOU.T,APP.pass!==undefined];
+  const done=modules.filter(Boolean).length;
+  const pct=Math.round(done/modules.length*100);
+  const bar=document.getElementById('progBar');
+  const lbl=document.getElementById('progPct');
+  if(bar){bar.style.width=pct+'%';bar.className='pbf '+(pct===100?'ok':pct>=50?'warn':'bad');}
+  if(lbl)lbl.textContent=pct+'%';
+}
+function updateProjectHeader(){
+  const nom=document.getElementById('fi_nom')?.value;
+  if(nom)document.title='RPOA v3 — '+nom;
+}
+
+
+function runAll(){
+  try{doSpec();}catch(e){toast('Spectre: '+e.message,'err');}
+  try{doPou();}catch(e){toast('Poutres: '+e.message,'err');}
+  try{doVou();}catch(e){toast('Voussoirs: '+e.message,'err');}
+  try{doApp();}catch(e){toast('Appareils: '+e.message,'err');}
+  try{doEffh();}catch(e){toast('Efforts H: '+e.message,'err');}
+  try{doTrans();}catch(e){}
+  try{doVert();}catch(e){}
+  updateSummary();
+  toast('Tous les modules calculés ✓','ok');
+}
+function resetAll(){
+  SP={};POU={};VOU={};APP={};
+  ['spec','pou','vou','app','sce','sens','effh','sum'].forEach(id=>{
+    const el=document.getElementById('st-'+id);
+    if(el)el.innerHTML='<span class="badge binfo">En attente</span>';
+    const ns=document.getElementById('ns-'+id);
+    if(ns)ns.className='nstat';
+  });
+  ['kT','kF','kD','kApp'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent='—';});
+  ['pouRes','vouRaid','vlRes','vtRes','vvRes','appRes','effhRes','sensRes','sceRes'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el)el.innerHTML='<div class="alert ai">⟳ En attente...</div>';
+  });
+  document.getElementById('sumContent').innerHTML='<div class="alert ai">⟳ Complétez les calculs pour générer le récapitulatif automatique.</div>';
+  toast('Réinitialisé ✓','ok');
+}
+
+
+function collectInputs(){
+  const data={};
+  document.querySelectorAll('input,select').forEach(el=>{if(el.id)data[el.id]=el.value;});
+  return data;
+}
+function saveProject(){
+  const data={meta:{saved:new Date().toISOString()},inputs:collectInputs(),SP,POU,VOU,APP};
+  const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);
+  a.download=`RPOA_${(document.getElementById('fi_nom')?.value||'projet').replace(/\s+/g,'_')}_${new Date().toISOString().slice(0,10)}.json`;
+  a.click();toast('Projet sauvegardé ✓','ok');
+}
+function loadProject(ev){
+  const f=ev.target.files[0];if(!f)return;
+  const r=new FileReader();
+  r.onload=e=>{
+    try{
+      const d=JSON.parse(e.target.result);
+      if(d.inputs)Object.entries(d.inputs).forEach(([k,val])=>{const el=document.getElementById(k);if(el)el.value=val;});
+      if(d.SP)SP=d.SP;if(d.POU)POU=d.POU;if(d.VOU)VOU=d.VOU;if(d.APP)APP=d.APP;
+      if(SP.A){setTimeout(redrawAll,100);setStat('spec','bok','✓ OK');}
+      if(POU.T)setStat('pou','bok','✓ OK');if(VOU.T)setStat('vou','bok','✓ OK');
+      if(APP.pass!==undefined)setStat('app',APP.allOk?'bok':'bnok',APP.allOk?'✓ OK':'⚠️');
+      updateSummary();toast('Projet chargé ✓','ok');
+    }catch{toast('Erreur fichier JSON','err');}
+  };r.readAsText(f);ev.target.value='';
+}
+
+// ════════════════════════════════════════════════════
+// PDF EXPORT (print with report layout)
+// ════════════════════════════════════════════════════
+// exportPDF() défini plus bas (version rapport complet v5)
+
+// ════════════════════════════════════════════════════
+// 3D SCHEMAS — WebGL-free Canvas 3D projection
+// ════════════════════════════════════════════════════
+const schemas={};
+function init3D(cvId,drawFn){
+  const cv=document.getElementById(cvId);if(!cv)return;
+  cv.width=cv.parentElement.offsetWidth||700;cv.height=320;
+  let rx=0.35,ry=0.5,scale=1,drag=false,lx,ly;
+  schemas[cvId]={rx,ry,scale,drawFn,cv};
+  function draw(){
+    schemas[cvId].drawFn(cv,schemas[cvId].rx,schemas[cvId].ry,schemas[cvId].scale);
+  }
+  cv.onmousedown=e=>{drag=true;lx=e.clientX;ly=e.clientY;};
+  cv.onmouseup=()=>drag=false;cv.onmouseleave=()=>drag=false;
+  cv.onmousemove=e=>{if(!drag)return;schemas[cvId].ry+=(e.clientX-lx)*0.008;schemas[cvId].rx+=(e.clientY-ly)*0.008;lx=e.clientX;ly=e.clientY;draw();};
+  cv.onwheel=e=>{e.preventDefault();schemas[cvId].scale*=e.deltaY>0?.92:1.09;draw();};
+  cv.ontouchstart=e=>{lx=e.touches[0].clientX;ly=e.touches[0].clientY;};
+  cv.ontouchmove=e=>{schemas[cvId].ry+=(e.touches[0].clientX-lx)*0.01;schemas[cvId].rx+=(e.touches[0].clientY-ly)*0.01;lx=e.touches[0].clientX;ly=e.touches[0].clientY;draw();};
+  draw();
+}
+
+// Project 3D → 2D
+function proj(x,y,z,rx,ry,sc,W,H){
+  const cr=Math.cos(rx),sr=Math.sin(rx),cy=Math.cos(ry),sy=Math.sin(ry);
+  const x2=cy*x+sy*z,y2=sr*(-sy*x+cy*z)+cr*y,z2=cr*(-sy*x+cy*z)-sr*y;
+  const fov=600,dz=fov-z2*sc;
+  return{px:W/2+(x2*sc/dz*fov),py:H/2-(y2*sc/dz*fov)};
+}
+function p3(ctx,pts,rx,ry,sc,W,H,fill,stroke,lw=1){
+  const pp=pts.map(([x,y,z])=>proj(x,y,z,rx,ry,sc,W,H));
+  ctx.beginPath();ctx.moveTo(pp[0].px,pp[0].py);
+  for(let i=1;i<pp.length;i++)ctx.lineTo(pp[i].px,pp[i].py);
+  ctx.closePath();if(fill){ctx.fillStyle=fill;ctx.fill();}
+  if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=lw;ctx.stroke();}
+}
+function l3(ctx,x1,y1,z1,x2,y2,z2,rx,ry,sc,W,H,col,lw=1.5){
+  const a=proj(x1,y1,z1,rx,ry,sc,W,H),b=proj(x2,y2,z2,rx,ry,sc,W,H);
+  ctx.beginPath();ctx.moveTo(a.px,a.py);ctx.lineTo(b.px,b.py);ctx.strokeStyle=col;ctx.lineWidth=lw;ctx.stroke();
+}
+function lbl3(ctx,x,y,z,txt,rx,ry,sc,W,H,col='#888',fs=10){
+  const p=proj(x,y,z,rx,ry,sc,W,H);ctx.fillStyle=col;ctx.font=`${fs}px DM Sans,sans-serif`;ctx.textAlign='center';ctx.fillText(txt,p.px,p.py);
+}
+
+function draw3Pou(cv,rx,ry,sc){
+  const ctx=cv.getContext('2d'),W=cv.width,H=cv.height;
+  const bg=isDark?'#040710':'#f0f4ff',dec=isDark?'#1a2a50':'#c0cce0';
+  ctx.fillStyle=bg;ctx.fillRect(0,0,W,H);
+  // Grid
+  ctx.strokeStyle=dec;ctx.lineWidth=.5;
+  for(let i=-3;i<=3;i++){l3(ctx,i*40,-80,-120,i*40,-80,120,rx,ry,sc,W,H,dec,.4);l3(ctx,-120,-80,i*40,120,-80,i*40,rx,ry,sc,W,H,dec,.4);}
+  // Piles
+  const pCols=isDark?['#1a3060','#1e3870','#223f7a']:['#a0b8e0','#b0c8f0','#c0d4f8'];
+  [[-60,-80,0],[60,-80,0]].forEach((p,i)=>{
+    const[px,py,pz]=p;
+    p3(ctx,[[px-8,py,pz-8],[px+8,py,pz-8],[px+8,py,pz+8],[px-8,py,pz+8]],rx,ry,sc,W,H,pCols[0],isDark?'#2a4a90':'#90a8d0',1.5);
+    p3(ctx,[[px-8,-20,pz-8],[px+8,-20,pz-8],[px+8,-20,pz+8],[px-8,-20,pz+8]],rx,ry,sc,W,H,pCols[1],isDark?'#3a5aaa':'#90a8d0',1.5);
+    p3(ctx,[[px-8,py,pz-8],[px+8,py,pz-8],[px+8,-20,pz-8],[px-8,-20,pz-8]],rx,ry,sc,W,H,pCols[2],isDark?'#2a4a90':'#90a8d0',1.5);
+    l3(ctx,px,py,pz,px,-20,pz,rx,ry,sc,W,H,isDark?'#4a90e8':'#2060c0',2);
+    lbl3(ctx,px,-5,pz+18,i===0?'Pile 1':'Pile 2',rx,ry,sc,W,H,isDark?'#4a90e8':'#1050a0',9);
+  });
+  // Culées
+  [[-110,-30,0],[110,-30,0]].forEach((p,i)=>{
+    p3(ctx,[[p[0]-10,p[1],-20],[p[0]+10,p[1],-20],[p[0]+10,p[1],20],[p[0]-10,p[1],20]],rx,ry,sc,W,H,isDark?'#2a4060':'#b0c0d8',isDark?'#3a5080':'#809cc0',1.5);
+    p3(ctx,[[p[0]-10,-80,-20],[p[0]+10,-80,-20],[p[0]+10,-80,20],[p[0]-10,-80,20]],rx,ry,sc,W,H,isDark?'#1a3050':'#90a0c0',null,1);
+    lbl3(ctx,p[0],p[1]+15,25,i===0?'Culée G':'Culée D',rx,ry,sc,W,H,isDark?'#6a90c0':'#4060a0',9);
+  });
+  // Tablier
+  p3(ctx,[[-120,-20,-25],[120,-20,-25],[120,-20,25],[-120,-20,25]],rx,ry,sc,W,H,isDark?'rgba(74,144,232,.35)':'rgba(48,100,200,.25)',isDark?'#4a90e8':'#2060c0',2);
+  p3(ctx,[[-120,-35,-25],[120,-35,-25],[120,-35,25],[-120,-35,25]],rx,ry,sc,W,H,isDark?'rgba(74,144,232,.2)':'rgba(48,100,200,.15)',null,1);
+  p3(ctx,[[-120,-20,-25],[-120,-35,-25],[-120,-35,25],[-120,-20,25]],rx,ry,sc,W,H,isDark?'rgba(74,144,232,.25)':'rgba(48,100,200,.2)',isDark?'#4a90e8':'#2060c0',1.5);
+  p3(ctx,[[120,-20,-25],[120,-35,-25],[120,-35,25],[120,-20,25]],rx,ry,sc,W,H,isDark?'rgba(74,144,232,.25)':'rgba(48,100,200,.2)',isDark?'#4a90e8':'#2060c0',1.5);
+  lbl3(ctx,0,-12,35,'Tablier BP',rx,ry,sc,W,H,isDark?'#4a90e8':'#1040b0',10);
+  // Séisme arrows
+  [[-90,-27,0],[-30,-27,0],[30,-27,0],[90,-27,0]].forEach(p=>{
+    l3(ctx,p[0],p[1],p[2],p[0]+18,p[1],p[2],rx,ry,sc,W,H,'#f0a830',2.5);
+  });
+  lbl3(ctx,0,-50,-40,'←  Séisme  →',rx,ry,sc,W,H,isDark?'#f0a830':'#c07800',10);
+}
+
+function draw3Vou(cv,rx,ry,sc){
+  const ctx=cv.getContext('2d'),W=cv.width,H=cv.height;
+  const bg=isDark?'#040710':'#f0f4ff';ctx.fillStyle=bg;ctx.fillRect(0,0,W,H);
+  const g=isDark?'#1a2a50':'#c0cce0';
+  for(let i=-3;i<=3;i++){l3(ctx,i*40,-80,-100,i*40,-80,100,rx,ry,sc,W,H,g,.35);l3(ctx,-120,-80,i*35,120,-80,i*35,rx,ry,sc,W,H,g,.35);}
+  // Pile voile
+  p3(ctx,[[-5,-80,-35],[5,-80,-35],[5,-80,35],[-5,-80,35]],rx,ry,sc,W,H,isDark?'#142030':'#a0b0c8',isDark?'#1e3050':'#708090',1);
+  p3(ctx,[[-5,-15,-35],[5,-15,-35],[5,-15,35],[-5,-15,35]],rx,ry,sc,W,H,isDark?'#1e3050':'#b0c0d8',isDark?'#2a4060':'#8090a8',1.5);
+  l3(ctx,0,-80,-35,0,-15,-35,rx,ry,sc,W,H,isDark?'#4a90e8':'#2060c0',2.5);
+  l3(ctx,0,-80,35,0,-15,35,rx,ry,sc,W,H,isDark?'#4a90e8':'#2060c0',2.5);
+  lbl3(ctx,25,-48,0,'Pile voile\n12EI/h³',rx,ry,sc,W,H,isDark?'#4a90e8':'#2060c0',9);
+  // Tablier voussoirs (segments)
+  for(let i=-110;i<110;i+=20){
+    const f=Math.abs(i)/120,hh=10+f*8;
+    p3(ctx,[[i,-10-hh,-25],[i+18,-10-hh,-25],[i+18,-10,-25],[i,-10,-25]],rx,ry,sc,W,H,isDark?`rgba(160,96,240,${.2+f*.3})`:`rgba(120,60,200,${.15+f*.2})`,isDark?'#a060f0':'#7040d0',1.2);
+    p3(ctx,[[i,-10-hh,-25],[i+18,-10-hh,-25],[i+18,-10-hh,25],[i,-10-hh,25]],rx,ry,sc,W,H,isDark?`rgba(160,96,240,.35)`:`rgba(120,60,200,.25)`,isDark?'#a060f0':'#7040d0',1);
+  }
+  lbl3(ctx,0,5,-40,'Tablier voussoirs BP',rx,ry,sc,W,H,isDark?'#a060f0':'#6030c0',10);
+  // Appareil d'appui
+  p3(ctx,[[-8,-14,-8],[8,-14,-8],[8,-14,8],[-8,-14,8]],rx,ry,sc,W,H,isDark?'#2ed47a':'#18a050',isDark?'#2ed47a':'#18a050',2);
+  lbl3(ctx,22,-12,0,'App. d\'appui',rx,ry,sc,W,H,isDark?'#2ed47a':'#18a050',9);
+}
+
+function draw3Mod(cv,rx,ry,sc){
+  const ctx=cv.getContext('2d'),W=cv.width,H=cv.height;
+  const bg=isDark?'#040710':'#f0f4ff';ctx.fillStyle=bg;ctx.fillRect(0,0,W,H);
+  // Modèle brochette — masses et ressorts
+  const nodes=[-90,-45,0,45,90];
+  const Kc=isDark?'#2ed47a':'#18a050',Mc=isDark?'#f0a830':'#c07800',Sc=isDark?'#4a90e8':'#2060c0';
+  // Sol
+  p3(ctx,[[-115,50,-5],[115,50,-5],[115,50,5],[-115,50,5]],rx,ry,sc,W,H,isDark?'#182838':'#c0ccd8',isDark?'#1e3048':'#9aa8b8',1);
+  nodes.forEach((x,i)=>{
+    // Spring
+    for(let s=0;s<5;s++){l3(ctx,x+(-1+s%2)*6,50-s*8,0,x+(1-(s+1)%2)*6,50-(s+1)*8,0,rx,ry,sc,W,H,Kc,1.5);}
+    l3(ctx,x,50,0,x,42,0,rx,ry,sc,W,H,Kc,1.5);
+    l3(ctx,x,10,0,x,2,0,rx,ry,sc,W,H,Kc,1.5);
+    // Mass
+    p3(ctx,[[x-10,0,-8],[x+10,0,-8],[x+10,0,8],[x-10,0,8]],rx,ry,sc,W,H,isDark?'rgba(240,168,48,.3)':'rgba(200,120,0,.2)',Mc,2);
+    p3(ctx,[[x-10,10,-8],[x+10,10,-8],[x+10,10,8],[x-10,10,8]],rx,ry,sc,W,H,isDark?'rgba(240,168,48,.2)':'rgba(200,120,0,.15)',Mc,1.5);
+    lbl3(ctx,x,0,18,`m${i+1}`,rx,ry,sc,W,H,Mc,9);
+    // Horizontal spring (tablier)
+    if(i<nodes.length-1)l3(ctx,x+10,5,0,nodes[i+1]-10,5,0,rx,ry,sc,W,H,Sc,2);
+    // Arrow seismic
+    l3(ctx,x-18,-5,0,x-5,-5,0,rx,ry,sc,W,H,'#f0a830',2);
+  });
+  lbl3(ctx,0,-30,0,'Modèle Brochette (séisme transversal)',rx,ry,sc,W,H,isDark?'#f0a830':'#c07800',10);
+  lbl3(ctx,0,65,0,'///  Sol de fondation  ///',rx,ry,sc,W,H,isDark?'#2a4060':'#8090a8',9);
+}
+
+function initAll3D(){
+  if(!document.getElementById('cv3Pou').width||document.getElementById('cv3Pou').width<10){
+    document.getElementById('cv3Pou').width=document.getElementById('cv3Pou').parentElement.offsetWidth||700;
+    document.getElementById('cv3Vou').width=document.getElementById('cv3Vou').parentElement.offsetWidth||700;
+    document.getElementById('cv3Mod').width=document.getElementById('cv3Mod').parentElement.offsetWidth||700;
+  }
+  init3D('cv3Pou',draw3Pou);
+  init3D('cv3Vou',draw3Vou);
+  init3D('cv3Mod',draw3Mod);
+}
+
+
+// ════════════════════════════════════════════════════════════════
+// CRITÈRES DE RÉGULARITÉ — RPOA §1.7.1.1
+// ════════════════════════════════════════════════════════════════
+function doCrit(){
+  const mmf   = parseFloat(document.getElementById('cr_mmf').value)||0;
+  const biais = parseFloat(document.getElementById('cr_biais').value)||0;
+  const curv  = parseFloat(document.getElementById('cr_curv').value)||0;
+  const exc   = parseFloat(document.getElementById('cr_exc').value)||0;
+  const dKL   = parseFloat(document.getElementById('cr_dKL').value)||0;
+  const dKT   = parseFloat(document.getElementById('cr_dKT').value)||0;
+
+  const c1 = mmf  > 70;
+  const c2 = biais > 70 && dKL <= 10 && dKT <= 10;
+  const c3 = curv  < 30 && dKL <= 10 && dKT <= 10;
+  const c4 = exc   <= 5;
+  const all4 = c1 && c2 && c3 && c4;
+
+  const b2 = ok => ok
+    ? '<span class="badge bok">✓ Vérifié</span>'
+    : '<span class="badge bnok">✗ Non vérifié</span>';
+
+  const verdict = all4
+    ? '<div class="alert" style="background:rgba(46,212,122,.12);border-color:var(--grn);color:var(--grn);padding:10px;border-radius:6px;font-weight:600">✅ Méthode monomodale APPLICABLE — Toutes les conditions RPOA §1.7.1.1 sont satisfaites.</div>'
+    : '<div class="alert aw">⚠️ Méthode monomodale <strong>NON applicable</strong> directement — Utiliser la méthode multimodale ou justifier scientifiquement.</div>';
+
+  const html = `${verdict}
+  <table class="dt" style="margin-top:12px">
+    <thead><tr><th>#</th><th>Condition</th><th>Valeur</th><th>Limite</th><th>Statut</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td>Masse modale &gt; 70% M_tot</td><td class="mono">${mmf}%</td><td class="mono">&gt; 70%</td><td>${b2(c1)}</td></tr>
+      <tr><td>2</td><td>Biais &gt; 70g + ΔK ≤ 10%</td><td class="mono">${biais}g | ΔK_L=${dKL}% ΔK_T=${dKT}%</td><td class="mono">&gt;70g; ΔK≤10%</td><td>${b2(c2)}</td></tr>
+      <tr><td>3</td><td>Courbure &lt; 30g + ΔK ≤ 10%</td><td class="mono">${curv}g | ΔK_L=${dKL}% ΔK_T=${dKT}%</td><td class="mono">&lt;30g; ΔK≤10%</td><td>${b2(c3)}</td></tr>
+      <tr><td>4</td><td>Excentricité e₀ ≤ 5% L</td><td class="mono">${exc}%</td><td class="mono">≤ 5%</td><td>${b2(c4)}</td></tr>
+    </tbody>
+  </table>
+  ${!all4?'<div class="brow" style="margin-top:10px"><button class="btn bp" onclick="go(\'multi\')">→ Aller à l\'Analyse Multimodale</button></div>':''}`;
+
+  set('critRes', html);
+  setStat('crit', all4?'bok':'bwarn', all4?'✓ OK':'⚠ Irr.');
+  toast(all4 ? 'Méthode monomodale applicable ✓' : 'Régularité non satisfaite — voir multimodale', all4?'ok':'warn');
+}
+
+// ════════════════════════════════════════════════════════════════
+// ANALYSE MULTIMODALE — MÉTHODE DE RAYLEIGH §1.7.1.2b
+// ════════════════════════════════════════════════════════════════
+function buildMassTable(){
+  const n = parseInt(document.getElementById('mm_nn')?.value)||5;
+  const body = document.getElementById('massTableBody');
+  if(!body) return;
+  const existing = body.querySelectorAll('tr');
+  // Valeurs par défaut issues de l'exemple mémoire (§3.3.5)
+  const defM = [670.5, 778.43, 670.5, 670.5, 778.43];
+  const defU = [0.00443, 0.00605, 0.00443, 0.00443, 0.00605];
+  body.innerHTML = '';
+  for(let i=0;i<n;i++){
+    const row = document.createElement('tr');
+    row.innerHTML = `<td class="mono">${i+1}</td>
+      <td><input type="number" id="mm_m${i}" value="${defM[i]||200}" min="0" step="1" style="width:100%;padding:3px 6px;background:var(--inp);border:1px solid var(--bord);border-radius:4px;color:var(--txt);font-size:11px"></td>
+      <td><input type="number" id="mm_u${i}" value="${defU[i]||0.005}" min="0" step="0.0001" style="width:100%;padding:3px 6px;background:var(--inp);border:1px solid var(--bord);border-radius:4px;color:var(--txt);font-size:11px;font-family:'DM Mono',monospace"></td>`;
+    body.appendChild(row);
+  }
+}
+
+function doMulti(){
+  const n  = parseInt(document.getElementById('mm_nn').value)||5;
+  const zn = document.getElementById('mm_zn').value;
+  const cl = document.getElementById('mm_cl').value;
+  const si = document.getElementById('mm_si').value;
+  const xi = parseFloat(document.getElementById('mm_xi').value)||5;
+  const sp = document.getElementById('mm_sp').value;
+
+  const ms = [], us = [];
+  for(let i=0;i<n;i++){
+    ms.push(parseFloat(document.getElementById('mm_m'+i)?.value)||0);
+    us.push(parseFloat(document.getElementById('mm_u'+i)?.value)||0);
+  }
+  if(ms.some(m=>m<=0)){toast('⚠️ Vérifiez les masses (> 0)','warn');return;}
+  if(us.some(u=>u<=0)){toast('⚠️ Vérifiez les déplacements Uᵢ (> 0)','warn');return;}
+
+  // Rayleigh : T = 2π √( Σ(m·U²) / Σ(m·U) )
+  const sumMU2 = ms.reduce((s,m,i)=>s+m*us[i]*us[i],0);
+  const sumMU  = ms.reduce((s,m,i)=>s+m*us[i],0);
+  const T = 2*Math.PI*Math.sqrt(sumMU2/sumMU);
+
+  // Spectre
+  const A = getA(zn,cl), nn = eta(xi), al = alpha(zn);
+  const sh = SH_[si], sv = SV_[si];
+  let Sa;
+  if(sp==='H')      Sa = Sah(T,A,nn,sh.S,sh.T1,sh.T2);
+  else if(sp==='V') Sa = Sav(T,A,nn,al,sv.T1,sv.T2);
+  else              Sa = Sad(T,A,nn,sh.S,sh.T2);
+
+  // Forces nodales : Fᵢ = (2π/T)² · (Sa/g) · Uᵢ · mᵢ
+  const coef = Math.pow(2*Math.PI/T,2) * Sa / G_;
+  const Fs = ms.map((m,i)=>coef*us[i]*m);
+  const Ftot = Fs.reduce((s,f)=>s+f,0);
+  const D = Math.pow(T/(2*Math.PI),2)*Sa;
+
+  // Résultat SRSS (illustration 2 "modes" : 1er=Rayleigh + 2ème=0.3×1er)
+  const R_SRSS = Math.sqrt(Ftot*Ftot + Math.pow(0.3*Ftot,2));
+
+  const rows = ms.map((m,i)=>`
+    <tr><td class="mono">${i+1}</td><td class="mono">${m.toFixed(1)} t</td>
+    <td class="mono">${us[i].toFixed(5)} m</td>
+    <td class="mono" style="color:var(--acc)">${Fs[i].toFixed(3)} KN</td></tr>`).join('');
+
+  const html = `
+  <div class="rg" style="grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:12px">
+    <div class="ri"><div class="rl">T Rayleigh</div><div class="rv" style="color:var(--acc)">${T.toFixed(4)} s</div></div>
+    <div class="ri"><div class="rl">Sa(T)</div><div class="rv">${Sa.toFixed(4)} m/s²</div></div>
+    <div class="ri"><div class="rl">Σ(mᵢ·Uᵢ²)</div><div class="rv mono">${sumMU2.toFixed(4)}</div></div>
+    <div class="ri"><div class="rl">Σ(mᵢ·Uᵢ)</div><div class="rv mono">${sumMU.toFixed(4)}</div></div>
+    <div class="ri"><div class="rl">F_total</div><div class="rv b">${Ftot.toFixed(3)} KN</div></div>
+    <div class="ri"><div class="rl">Déplacement D</div><div class="rv g">${D.toFixed(5)} m</div></div>
+    <div class="ri"><div class="rl">F_SRSS (modes)</div><div class="rv">${R_SRSS.toFixed(3)} KN</div></div>
+    <div class="ri"><div class="rl">Zone / A</div><div class="rv">${zn} / ${A}</div></div>
+  </div>
+  <div class="ctitle cg">Forces nodales Fᵢ</div>
+  <table class="dt"><thead><tr><th>i</th><th>mᵢ (t)</th><th>Uᵢ (m)</th><th>Fᵢ (KN)</th></tr></thead>
+  <tbody>${rows}</tbody></table>
+  <div class="fbox" style="margin-top:10px">Coefficient = (2π/T)²·Sa/g = ${coef.toFixed(4)} KN/t·m</div>`;
+
+  set('multiRes', html);
+  setStat('multi','bok','✓ OK');
+  toast('Analyse Rayleigh terminée — T='+T.toFixed(3)+' s','ok');
+}
+
+// ════════════════════════════════════════════════════════════════
+// EXPORT CSV — Tous les résultats calculés
+// ════════════════════════════════════════════════════════════════
+function exportCSV(){
+  const rows=[];
+  const nom = document.getElementById('fi_nom')?.value||'RPOA';
+  const ing = document.getElementById('fi_ing')?.value||'';
+  const date= document.getElementById('fi_date')?.value||new Date().toISOString().slice(0,10);
+
+  rows.push(['RPOA v5 — Export CSV','','']);
+  rows.push(['Projet',nom,'']);
+  rows.push(['Ingénieur',ing,'']);
+  rows.push(['Date',date,'']);
+  rows.push(['','','']);
+
+  if(SP.A){
+    rows.push(['=== SPECTRE DE RÉPONSE ===','','']);
+    rows.push(['Paramètre','Valeur','Unité']);
+    rows.push(['Zone sismique',SP.zn,'']);
+    rows.push(['Classe pont','G'+SP.cl,'']);
+    rows.push(['Site',SP.si,'']);
+    rows.push(['A',SP.A,'']);
+    rows.push(['S',SP.S,'']);
+    rows.push(['η',SP.n.toFixed(4),'']);
+    rows.push(['T1',SP.T1,'s']);
+    rows.push(['T2',SP.T2,'s']);
+    rows.push(['Saᵉʰ(T)',SP.Sh.toFixed(4),'m/s²']);
+    rows.push(['Saᵉᵛ(T)',SP.Sv.toFixed(4),'m/s²']);
+    rows.push(['Saᵈ(T)',SP.Sd.toFixed(4),'m/s²']);
+    rows.push(['','','']);
+  }
+  if(POU.T){
+    rows.push(['=== PONT À POUTRES BP ===','','']);
+    rows.push(['Paramètre','Valeur','Unité']);
+    rows.push(['I fût',POU.I.toFixed(6),'m⁴']);
+    rows.push(['K pile',POU.Kp.toFixed(2),'KN/m']);
+    rows.push(['K app pile',POU.Kap.toFixed(2),'KN/m']);
+    rows.push(['K app culée',POU.Kac.toFixed(2),'KN/m']);
+    rows.push(['K tot pile',POU.Ktp.toFixed(2),'KN/m']);
+    rows.push(['K tot culée',POU.Ktc.toFixed(2),'KN/m']);
+    rows.push(['K système',POU.Ks.toFixed(2),'KN/m']);
+    rows.push(['Masse M',POU.M.toFixed(2),'t']);
+    rows.push(['T fondamental',POU.T.toFixed(4),'s']);
+    rows.push(['Saᵉʰ(T)',POU.Sh.toFixed(4),'m/s²']);
+    rows.push(['F total',POU.F.toFixed(2),'KN']);
+    rows.push(['F/culée',POU.Fc.toFixed(2),'KN']);
+    rows.push(['F/pile',POU.Fp.toFixed(2),'KN']);
+    rows.push(['D tablier',POU.Dt.toFixed(5),'m']);
+    rows.push(['D tête pile',POU.Dp.toFixed(5),'m']);
+    rows.push(['Tablier',POU.rigid?'Rigide':'Flexible','']);
+    rows.push(['','','']);
+  }
+  if(VOU.T){
+    rows.push(['=== PONT À VOUSSOIRS BP ===','','']);
+    rows.push(['Paramètre','Valeur','Unité']);
+    rows.push(['K pile',VOU.Kp.toFixed(4),'MN/m']);
+    rows.push(['K app',VOU.Ka.toFixed(4),'MN/m']);
+    rows.push(['K système',VOU.Ks.toFixed(4),'MN/m']);
+    rows.push(['Masse M',VOU.M.toFixed(2),'t']);
+    rows.push(['T longitudinal',VOU.T.toFixed(4),'s']);
+    rows.push(['F longitudinal',VOU.F.toFixed(4),'MN']);
+    rows.push(['D tablier',VOU.Dt.toFixed(5),'m']);
+    rows.push(['Cond. monomodale',VOU.cond?'Vérifiée':'Non vérifiée','']);
+    rows.push(['','','']);
+  }
+  if(APP.pass!==undefined){
+    rows.push(['=== APPAREILS D\'APPUI ===','','']);
+    rows.push(['Paramètre','Valeur','Unité/Limite']);
+    rows.push(['β',APP.beta.toFixed(3),'']);
+    rows.push(['G (module)',APP.G,'MPa']);
+    rows.push(['τN compression',APP.tauN.toFixed(4),'MPa — lim: '+3*APP.G]);
+    rows.push(['σmin',APP.sigMin.toFixed(4),'MPa — lim: ≥2']);
+    rows.push(['τH séisme',APP.tauHs.toFixed(4),'MPa — lim: '+(1.3*APP.G).toFixed(2)]);
+    rows.push(['τH freinage Bc',APP.tauHbc.toFixed(4),'MPa — lim: '+(0.7*APP.G).toFixed(2)]);
+    rows.push(['f frottement',APP.f_.toFixed(4),'']);
+    rows.push(['H < f·N',APP.Hgl.toFixed(4),'MN']);
+    rows.push(['γ_tot distorsion',APP.gtot.toFixed(4),'≤ 2.5']);
+    rows.push(['Vérifications',APP.pass+'/9','']);
+    rows.push(['Résultat global',APP.allOk?'VÉRIFIÉ':'NON VÉRIFIÉ','']);
+  }
+
+  // Construire le CSV
+  const csv = rows.map(r=>r.map(c=>'"'+String(c).replace(/"/g,'""')+'"').join(',')).join('\n');
+  const blob = new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8;'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href=url; a.download='RPOA_v5_'+(nom.replace(/\s+/g,'_')||'resultats')+'_'+date+'.csv';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  toast('Export CSV téléchargé ✓','ok');
+}
+
+// ════════════════════════════════════════════════════════════════
+// RAPPORT PDF AMÉLIORÉ — Formules + Références RPOA
+// ════════════════════════════════════════════════════════════════
+function exportPDF(){
+  // Construire le contenu complet du rapport
+  const nom  = document.getElementById('fi_nom')?.value||'—';
+  const ing  = document.getElementById('fi_ing')?.value||'—';
+  const date = document.getElementById('fi_date')?.value||new Date().toISOString().slice(0,10);
+  const ref  = document.getElementById('fi_ref')?.value||'—';
+
+  let body = `<style>
+    body{font-family:'Segoe UI',Arial,sans-serif;font-size:11px;color:#111;margin:0;padding:0}
+    h1{font-size:18px;font-weight:700;color:#c87800;letter-spacing:2px;margin:0 0 4px}
+    h2{font-size:12px;font-weight:700;color:#2050a0;border-bottom:1.5px solid #2050a0;padding-bottom:3px;margin:16px 0 8px;letter-spacing:1px;text-transform:uppercase}
+    h3{font-size:11px;font-weight:600;color:#555;margin:10px 0 4px}
+    table{width:100%;border-collapse:collapse;margin-bottom:10px;font-size:10.5px}
+    th{background:#2050a0;color:#fff;padding:5px 8px;text-align:left;font-weight:600}
+    td{padding:4px 8px;border-bottom:1px solid #dde2f0}
+    tr:nth-child(even) td{background:#f5f7ff}
+    .mono{font-family:'Consolas','Courier New',monospace;font-size:10px}
+    .ok{color:#18a050;font-weight:700} .nok{color:#cc2828;font-weight:700}
+    .hdr{background:#f5f7ff;border-bottom:2px solid #c87800;padding:14px 20px;margin-bottom:16px}
+    .hdr-grid{display:flex;justify-content:space-between;align-items:flex-start}
+    .sub{font-size:9.5px;color:#666;margin-top:3px}
+    .infoblock{display:grid;grid-template-columns:1fr 1fr;gap:4px 16px;font-size:10px;color:#444}
+    .infoblock b{color:#222}
+    .form-box{background:#fff8ee;border:1px solid #f0d080;border-radius:4px;padding:8px 12px;margin:8px 0;font-size:10px;font-family:monospace;white-space:pre;line-height:1.6}
+    .badge-ok{display:inline-block;background:#d4f5e2;color:#18a050;border-radius:3px;padding:1px 6px;font-size:9.5px;font-weight:700}
+    .badge-nok{display:inline-block;background:#fde8e8;color:#cc2828;border-radius:3px;padding:1px 6px;font-size:9.5px;font-weight:700}
+    .page-break{page-break-before:always}
+    footer{position:fixed;bottom:0;left:0;right:0;text-align:center;font-size:8.5px;color:#aaa;border-top:1px solid #eee;padding:4px}
+    @page{size:A4;margin:1.5cm}
+  </style>
+  <div class="hdr">
+    <div class="hdr-grid">
+      <div>
+        <h1>RPOA v5 — CALCUL SISMIQUE DES APPUIS DE PONT</h1>
+        <div class="sub">Règlement Parasismique des Ouvrages d'Art (RPOA 2008) — Méthode spectrale monomodale §1.7.1.2</div>
+      </div>
+      <div style="text-align:right;font-size:9px;color:#888">
+        <div>Généré le ${new Date().toLocaleDateString('fr-FR')}</div>
+        <div>RPOA v5 — Univ. MSB Jijel</div>
+      </div>
+    </div>
+    <div class="infoblock" style="margin-top:10px">
+      <div><b>Projet :</b> ${nom}</div>
+      <div><b>Référence :</b> ${ref}</div>
+      <div><b>Ingénieur :</b> ${ing}</div>
+      <div><b>Date :</b> ${date}</div>
+    </div>
+  </div>`;
+
+  // Spectre
+  if(SP.A){
+    body+=`<h2>1. Spectre de Réponse — RPOA Art. 1.5</h2>
+    <h3>1.1 Paramètres sismiques</h3>
+    <table><tr><th>Paramètre</th><th>Valeur</th><th>Référence</th></tr>
+      <tr><td>Zone sismique</td><td class="mono">${SP.zn}</td><td>RPOA Tab. 1.2</td></tr>
+      <tr><td>Classe du pont</td><td class="mono">Groupe ${SP.cl}</td><td>RPOA Tab. 1.1</td></tr>
+      <tr><td>Coefficient A</td><td class="mono">${SP.A}</td><td>RPOA Tab. 1.2</td></tr>
+      <tr><td>Catégorie de site</td><td class="mono">${SP.si}</td><td>RPOA §1.4.4</td></tr>
+      <tr><td>Coefficient de site S</td><td class="mono">${SP.S}</td><td>RPOA Tab. 1.3</td></tr>
+      <tr><td>T1 / T2 horizontaux</td><td class="mono">${SP.T1} s / ${SP.T2} s</td><td>RPOA Tab. 1.3</td></tr>
+      <tr><td>Amortissement ξ</td><td class="mono">${SP.xi||5} %</td><td>RPOA §1.6.3.4</td></tr>
+      <tr><td>Facteur η = √(7/(2+ξ))</td><td class="mono">${SP.n.toFixed(4)}</td><td>RPOA §1.5.1</td></tr>
+      <tr><td>α (composante verticale)</td><td class="mono">${SP.al}</td><td>Zone ${SP.zn==='III'?'III → α=1.0':'I/IIa/IIb → α=0.7'}</td></tr>
+    </table>
+    <h3>1.2 Accélérations spectrales à T = ${SP.Tq||'—'} s</h3>
+    <div class="form-box">Saᵉʰ(T) = 2.5·η·A·g·S·(T2/T)  =  ${SP.Sh.toFixed(4)} m/s²  [horizontal]
+Saᵉᵛ(T) = 2.5·η·A·g·α·(T2/T) =  ${SP.Sv.toFixed(4)} m/s²  [vertical]
+Saᵈ(T)  = 2.5·η·A·g·S·(T2/T) =  ${SP.Sd.toFixed(4)} m/s²  [dimensionnement]</div>`;
+  }
+
+  // Pont à poutres
+  if(POU.T){
+    body+=`<h2 class="page-break">2. Pont à Poutres BP — RPOA §1.7.1.2a</h2>
+    <h3>2.1 Raideurs</h3>
+    <div class="form-box">I = π·D⁴/64 = ${POU.I.toFixed(6)} m⁴
+K_pile = n_fûts·enc·E·I/h³ = ${POU.Kp.toFixed(2)} KN/m
+K_app/pile = n·G·a·b/e     = ${POU.Kap.toFixed(2)} KN/m
+K_tot/pile = 1/(1/K_app+1/K_pile) = ${POU.Ktp.toFixed(2)} KN/m
+K_app/culée = ${POU.Kac.toFixed(2)} KN/m
+K_système = 2·K_culée + n_piles·K_tot/pile = ${POU.Ks.toFixed(2)} KN/m</div>
+    <table><tr><th>Grandeur</th><th>Valeur</th><th>Unité</th></tr>
+      <tr><td>Moment d'inertie I</td><td class="mono">${POU.I.toFixed(6)}</td><td>m⁴</td></tr>
+      <tr><td>Raideur pile K_pile</td><td class="mono">${POU.Kp.toFixed(2)}</td><td>KN/m</td></tr>
+      <tr><td>Raideur app. pile</td><td class="mono">${POU.Kap.toFixed(2)}</td><td>KN/m</td></tr>
+      <tr><td>Raideur app. culée</td><td class="mono">${POU.Kac.toFixed(2)}</td><td>KN/m</td></tr>
+      <tr><td>Raideur tot. pile</td><td class="mono">${POU.Ktp.toFixed(2)}</td><td>KN/m</td></tr>
+      <tr><td>Raideur tot. culée</td><td class="mono">${POU.Ktc.toFixed(2)}</td><td>KN/m</td></tr>
+      <tr><td><b>K système</b></td><td class="mono"><b>${POU.Ks.toFixed(2)}</b></td><td>KN/m</td></tr>
+    </table>
+    <h3>2.2 Analyse sismique</h3>
+    <div class="form-box">T = 2π·√(M/K) = 2π·√(${POU.M.toFixed(1)}×1000/${POU.Ks.toFixed(0)}×1000) = ${POU.T.toFixed(4)} s
+Saᵉʰ(T) = ${POU.Sh.toFixed(4)} m/s²
+F = M·Sa(T) = ${POU.M.toFixed(1)}×${POU.Sh.toFixed(4)} = ${POU.F.toFixed(2)} KN
+D = (T/2π)²·Sa(T) = ${POU.Dt.toFixed(5)} m
+F_culée = (K_culée/K)·F = ${POU.Fc.toFixed(2)} KN
+F_pile  = (K_pile/K)·F  = ${POU.Fp.toFixed(2)} KN</div>
+    <p>Tablier : <strong>${POU.rigid?'RIGIDE (L/B='+POU.LB.toFixed(1)+'≥5)':'FLEXIBLE (L/B='+POU.LB.toFixed(1)+'<5)'}</strong></p>`;
+  }
+
+  // Appareils d'appui
+  if(APP.pass!==undefined){
+    const b2=ok=>ok?'<span class="badge-ok">✓ OK</span>':'<span class="badge-nok">✗ NON</span>';
+    body+=`<h2 class="page-break">3. Vérification Appareils d'Appui — RPOA §1.8.3</h2>
+    <div class="form-box">β = a·b/(2·Te·(a+b)) = ${APP.beta.toFixed(3)}
+σmin = Nmin/(a·b) = ${APP.sigMin.toFixed(4)} MPa
+τN = 1.5·Nmax/(a·b·β) = ${APP.tauN.toFixed(4)} MPa  [lim: 3G=${(3*APP.G).toFixed(2)} MPa]
+τH1 = G·U/T_e = (cisaillement dû déplacement)
+τH = τH1 + 0.5·(H/(a·b))
+f = 0.12 + 0.6/σmin = ${APP.f_.toFixed(4)}   [anti-glissement]</div>
+    <table><tr><th>Condition RPOA</th><th>Valeur calculée</th><th>Limite</th><th>Résultat</th></tr>
+      <tr><td>τN &lt; 3G (compression)</td><td class="mono">${APP.tauN.toFixed(4)} MPa</td><td>${(3*APP.G).toFixed(2)} MPa</td><td>${b2(APP.tauN<3*APP.G)}</td></tr>
+      <tr><td>σmin ≥ 2 MPa</td><td class="mono">${APP.sigMin.toFixed(4)} MPa</td><td>2 MPa</td><td>${b2(APP.sigMin>=2)}</td></tr>
+      <tr><td>τH séisme &lt; 1.3G</td><td class="mono">${APP.tauHs.toFixed(4)} MPa</td><td>${(1.3*APP.G).toFixed(2)} MPa</td><td>${b2(APP.tauHs<1.3*APP.G)}</td></tr>
+      <tr><td>τH freinage Bc &lt; 0.7G</td><td class="mono">${APP.tauHbc.toFixed(4)} MPa</td><td>${(0.7*APP.G).toFixed(2)} MPa</td><td>${b2(APP.tauHbc<0.7*APP.G)}</td></tr>
+      <tr><td>τH freinage A(L) &lt; 0.7G</td><td class="mono">${APP.tauHal.toFixed(4)} MPa</td><td>${(0.7*APP.G).toFixed(2)} MPa</td><td>${b2(APP.tauHal<0.7*APP.G)}</td></tr>
+      <tr><td>τH vent &lt; 0.7G</td><td class="mono">${APP.tauHve.toFixed(4)} MPa</td><td>${(0.7*APP.G).toFixed(2)} MPa</td><td>${b2(APP.tauHve<0.7*APP.G)}</td></tr>
+      <tr><td>H &lt; f·N (non-glissement)</td><td class="mono">Hs=${APP.Hgl.toFixed(4)}</td><td>Hs&lt;f·N</td><td>${b2(APP.pass>=7)}</td></tr>
+      <tr><td>ε &lt; 0.7·T (déformation)</td><td class="mono">—</td><td>—</td><td>${b2(APP.pass>=8)}</td></tr>
+      <tr><td>γ_tot ≤ 2.5 (distorsion)</td><td class="mono">${APP.gtot.toFixed(4)}</td><td>2.5</td><td>${b2(APP.gtot<=2.5)}</td></tr>
+    </table>
+    <p>Résultat global : <strong>${APP.pass}/9 conditions vérifiées</strong> — 
+      ${APP.allOk?'<span class="badge-ok">✅ APPAREIL CONFORME RPOA</span>':'<span class="badge-nok">⚠ REVOIR APPAREIL D\'APPUI</span>'}</p>`;
+  }
+
+  body += `<footer>RPOA v5 — ${nom} — ${date} — Basé sur RPOA 2008 &amp; Mémoire K. Amira, Univ. MSB Jijel 2022/2023</footer>`;
+
+  // ── Impression via iframe caché (pas de popup → jamais bloqué) ──
+  const existingFrame = document.getElementById('_pdfFrame');
+  if(existingFrame) existingFrame.remove();
+
+  const iframe = document.createElement('iframe');
+  iframe.id = '_pdfFrame';
+  iframe.style.cssText = 'position:fixed;top:-9999px;left:-9999px;width:1px;height:1px;border:none;opacity:0;';
+  document.body.appendChild(iframe);
+
+  const doc = iframe.contentDocument || iframe.contentWindow.document;
+  doc.open();
+  doc.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Rapport RPOA — '+nom+'</title></head><body>'+body+'</body></html>');
+  doc.close();
+
+  iframe.onload = function(){
+    try {
+      iframe.contentWindow.focus();
+      iframe.contentWindow.print();
+      toast('Rapport PDF — Boîte d\'impression ouverte ✓','ok');
+    } catch(e) {
+      // Fallback : ouvrir dans un blob URL
+      const blob = new Blob(['<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Rapport RPOA</title></head><body>'+body+'</body></html>'], {type:'text/html'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.target = '_blank'; a.rel = 'noopener';
+      document.body.appendChild(a); a.click();
+      document.body.removeChild(a);
+      setTimeout(()=>URL.revokeObjectURL(url), 5000);
+      toast('Rapport ouvert dans un nouvel onglet — Ctrl+P pour imprimer','ok');
+    }
+  };
+}
+
+// Initialiser le tableau de masses au démarrage
+function initMultiTable(){
+  const el = document.getElementById('mm_nn');
+  if(el) buildMassTable();
+}
+
+function $(id){return document.getElementById(id);}
+function set(id,html){const e=document.getElementById(id);if(e)e.innerHTML=html;}
+function v(id){return parseFloat(document.getElementById(id)?.value)||0;}
+function vi(id){return parseInt(document.getElementById(id)?.value)||0;}
+function toast(msg,type='ok'){
+  const c=document.getElementById('toast');
+  const d=document.createElement('div');d.className=`ti ${type}`;d.textContent=msg;c.appendChild(d);
+  setTimeout(()=>{d.style.opacity='0';d.style.transform='translateX(20px)';d.style.transition='.3s';setTimeout(()=>d.remove(),350);},2800);
+}
+
+// ════════════════════════════════════════════════════
+// INIT
+// ════════════════════════════════════════════════════
+window.addEventListener('load',()=>{
+  document.getElementById('fi_date').value=new Date().toISOString().slice(0,10);
+  initMultiTable();
+  document.title='RPOA v5 — Outil Sismique Complet';
+  // Remplir les valeurs eta dans le tableau de référence
+  ['2','4','2b','5','7'].forEach((k,i)=>{
+    const xi=[2,4,2,5,7][i];
+    const el=document.getElementById('eta-'+k);
+    if(el)el.textContent=eta2(xi);
+  });
+  doSpec();
+  updateProgress();
+  window.addEventListener('resize',()=>{
+    if(SP.A)setTimeout(redrawAll,80);
+    Object.keys(schemas).forEach(k=>{
+      const s=schemas[k];
+      if(s.cv&&s.cv.parentElement){
+        s.cv.width=s.cv.parentElement.offsetWidth||700;
+        s.drawFn(s.cv,s.rx,s.ry,s.scale);
+      }
+    });
+  });
+  // Raccourci clavier : Ctrl+S pour sauvegarder
+  document.addEventListener('keydown',e=>{
+    if((e.ctrlKey||e.metaKey)&&e.key==='s'){e.preventDefault();saveProject();}
+    if((e.ctrlKey||e.metaKey)&&e.key==='p'){e.preventDefault();exportPDF();}
+  });
+});
+</script>
+</body>
+</html>
